@@ -1,41 +1,24 @@
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
-import java.applet.AudioClip;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-
-import static java.applet.Applet.newAudioClip;
 
 public class HelloWindow {
-    private static final JPanel area1 = new JPanel();
-    private static final JPanel area2 = new JPanel();
-    private static final JPanel area3 = new JPanel();
-    private static final JPanel area4 = new JPanel();
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
-            Music.playMusic("res/bgmusic/Start.wav");
+            Music.playMusic("res/bgmusic/Start.wav", 0.25);//音量要求在0-2之间
         }
     });
 
-    private static AudioClip bgm;
-
-    private static Clip kick;
-
-    private static final JButton Play = new JButton("Play");
+    private static final JButton PVEMode = new JButton("PVEMode");
+    private static final JButton PVPMode = new JButton("PVPMode");
     private static final JButton Exit = new JButton("Exit");
 
     private static final JPanel centre = new JPanel();
 
     private static final JLabel test = new JLabel("Mr.CCC");
+    public static final int PVE = 1;
+    public static final int PVP = 0;
 
     private static void initial() {
         test.setVisible(true);
@@ -69,41 +52,37 @@ public class HelloWindow {
                 f.setContentPane(bgShow);
 
                 class MyMouseListener implements MouseListener {
-
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         System.out.println(e.getPoint());
                     }
-
                     @Override
-                    public void mousePressed(MouseEvent e) {
-
-                    }
-
+                    public void mousePressed(MouseEvent e) {}
                     @Override
-                    public void mouseReleased(MouseEvent e) {
-
-                    }
-
+                    public void mouseReleased(MouseEvent e) {}
                     @Override
-                    public void mouseEntered(MouseEvent e) {
-
-                    }
-
+                    public void mouseEntered(MouseEvent e) {}
                     @Override
-                    public void mouseExited(MouseEvent e) {
-
-                    }
+                    public void mouseExited(MouseEvent e) {}
                 }
 
                 f.addMouseListener(new MyMouseListener());
 
-                Play.addActionListener(new ActionListener() {
+                PVEMode.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
-                        GoBang.run(new JFrame(), 800, 600);
+                        GoBang.run(new JFrame(), 800, 600, PVE);
+                    }
+                });
+
+                PVPMode.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        f.dispose();//点击按钮关闭窗口
+                        musThread.stop();//本方法已被弃用，不安全，但是这里能使
+                        GoBang.run(new JFrame(), 800, 600, PVP);
                     }
                 });
 
@@ -114,10 +93,12 @@ public class HelloWindow {
                     }
                 });
 
-                Play.setBounds(600,400,200,60);
+                PVEMode.setBounds(600,280,200,60);
+                PVPMode.setBounds(600,400,200,60);
                 Exit.setBounds(600,520,200,60);
 
-                f.add(Play);
+                f.add(PVEMode);
+                f.add(PVPMode);
                 f.add(Exit);
 
                 initial();
