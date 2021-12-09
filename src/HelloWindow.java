@@ -17,8 +17,9 @@ public class HelloWindow {
     private static final JPanel centre = new JPanel();
 
     private static final JLabel test = new JLabel("Mr.CCC");
-    public static final int PVE = 1;
-    public static final int PVP = 0;
+    public static final int GAMEMODE_PVE = 1;
+    public static final int GAMEMODE_PVP = 0;
+    public static final int GAMEMODE_TEST = 2;
 
     private static void initial() {
         test.setVisible(true);
@@ -73,7 +74,7 @@ public class HelloWindow {
                     public void actionPerformed(ActionEvent e) {
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
-                        GoBang.run(new JFrame(), 800, 600, PVE);
+                        GoBang.run(new JFrame(), 800, 600, GAMEMODE_PVE);
                     }
                 });
 
@@ -82,7 +83,7 @@ public class HelloWindow {
                     public void actionPerformed(ActionEvent e) {
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
-                        GoBang.run(new JFrame(), 800, 600, PVP);
+                        GoBang.run(new JFrame(), 800, 600, GAMEMODE_PVP);
                     }
                 });
 

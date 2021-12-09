@@ -15,7 +15,8 @@ public class GoBang {
     private static final JPanel northBar = new JPanel();//北侧栏，用于显示状态以及备用，并且用于调试
     private static final JPanel stateBar = new JPanel();//南侧栏，用于放置一个状态栏，显示”谁在哪下了棋子“等信息
     private static final JPanel controlBar = new JPanel();//西侧栏，用于放置操作按钮，悔棋、认输、重新开始、退出游戏等
-    private static final JPanel contactBar = new JPanel();//东侧栏，用于交流和备用
+    private static final ContactPanel contactBar = new ContactPanel(new GridLayout(12,1), false);//东侧栏，用于交流和备用
+
 
     private static final JButton undoBtn = new JButton("悔棋");
     private static final JButton surrenderBtn = new JButton("认输");
@@ -33,10 +34,10 @@ public class GoBang {
     public static int steps = 0;//步数
     public static boolean winState = false;//是否胜利
 
-
+    public static int gameMode;
 
     //游戏界面，棋盘以及下棋
-    private static final JPanel centre = new JPanel();
+    private static final ChessPanel centre = new ChessPanel(null, false);
 
 
 
@@ -54,6 +55,7 @@ public class GoBang {
 
     public static void run(final JFrame f, final int width, final int height, int mode){
         //mode为模式选择
+        gameMode = mode;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -72,7 +74,7 @@ public class GoBang {
                 forceEnd.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        gameEnd();
+                        gameOver();
                         musThread.stop();
                     }
                 });
@@ -131,7 +133,6 @@ public class GoBang {
                         }
                     }
                 });
-
                 //
                 controlBar.add(undoBtn);
                 controlBar.add(surrenderBtn);
@@ -142,15 +143,19 @@ public class GoBang {
 
                 northBar.add(forceEnd);
                 stateBar.add(btn1);
-                contactBar.add(btn3);
-                centre.add(test);
 
+                northBar.setPreferredSize(new Dimension(800,30));
+                controlBar.setPreferredSize(new Dimension(100,600));
+                //contactBar.setPreferredSize(new Dimension(100,600));
+                stateBar.setPreferredSize(new Dimension(800,30));
 
                 f.add(northBar, BorderLayout.NORTH);
                 f.add(stateBar, BorderLayout.SOUTH);
                 f.add(controlBar, BorderLayout.WEST);
                 f.add(contactBar, BorderLayout.EAST);
                 f.add(centre, BorderLayout.CENTER);
+
+
 
                 f.setVisible(true);
             }
@@ -159,12 +164,12 @@ public class GoBang {
     }
 
     //游戏结束
-    private static void gameEnd() {
+    private static void gameOver() {
 
     }
 
     public static void main(String[] args) {
-        run(new JFrame(), 800, 600, HelloWindow.PVE);
+        run(new JFrame(), 955, 650, HelloWindow.GAMEMODE_TEST);//调试时默认使用调试模式
     }
 
 }
