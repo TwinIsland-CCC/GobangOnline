@@ -6,7 +6,7 @@ public class HelloWindow {
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
-            Music.playMusic("res/bgmusic/Start.wav", 0.25);//音量要求在0-2之间
+            Music.play("res/bgmusic/Start.wav", 0.25, Music.LOOP);//音量要求在0-2之间
         }
     });
 

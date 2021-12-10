@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ContactPanel extends JPanel {
+
     private static final JTextArea showArea = new JTextArea("Test");
     private static final JTextArea textArea = new JTextArea("Test");
     ImageIcon bgImage = new ImageIcon("res/other/chesspanel.png");

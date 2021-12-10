@@ -1,11 +1,26 @@
-import java.io.*;
 import javax.sound.sampled.*;
-import javax.swing.JFrame;
+import javax.swing.*;
+import java.io.File;
 
-public class Music extends JFrame{
+public class Sound extends JFrame{
     public static int LOOP = 1;
     public static int NOT_LOOP = 0;
-    static void playMusic(String path, double vol) {// 背景音乐播放
+    private String path = "res/audio/success.wav";
+    private double vol = 0.25;
+
+    public Sound(String s) {
+        path = s;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setVol(double vol) {
+        this.vol = vol;
+    }
+
+    private void playMusic() {// 背景音乐播放
         try {
             AudioInputStream ais = AudioSystem.getAudioInputStream(new File(path));
             AudioFormat aif = ais.getFormat();
@@ -33,12 +48,9 @@ public class Music extends JFrame{
             e.printStackTrace();
         }
     }
-    static void play(String path, double vol, int mode){
-        if (mode == LOOP) while(true) playMusic(path, vol);
-        else if (mode == NOT_LOOP) playMusic(path, vol);
-    }
-    public static void main(String[] args) {
-        new Music();
+    void play(int mode){
+        if (mode == LOOP) while(true) playMusic();
+        else if (mode == NOT_LOOP) playMusic();
     }
 }
 

@@ -44,9 +44,11 @@ public class GoBang {
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
-            Music.playMusic("res/bgmusic/MareMaris.wav", 0.25);
+            Music.play("res/bgmusic/MareMaris.wav", 0.25, Music.LOOP);
         }
     });
+
+    private static final Music snd = new Music();
 
     private static void initial() {
 
@@ -74,7 +76,7 @@ public class GoBang {
                 forceEnd.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        gameOver();
+                        GameOver();
                         musThread.stop();
                     }
                 });
@@ -164,8 +166,8 @@ public class GoBang {
     }
 
     //游戏结束
-    private static void gameOver() {
-
+    private static void GameOver() {
+        musThread.stop();
     }
 
     public static void main(String[] args) {
