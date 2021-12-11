@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class HelloWindow {
+public class HelloWindow extends JFrame {
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
@@ -10,24 +10,27 @@ public class HelloWindow {
         }
     });
 
+    private static final JButton offlineMode = new JButton("OfflineMode");
     private static final JButton PVEMode = new JButton("PVEMode");
     private static final JButton PVPMode = new JButton("PVPMode");
     private static final JButton Exit = new JButton("Exit");
 
-    private static final JPanel centre = new JPanel();
-
-    private static final JLabel test = new JLabel("Mr.CCC");
     public static final int GAMEMODE_PVE = 1;
     public static final int GAMEMODE_PVP = 0;
     public static final int GAMEMODE_TEST = 2;
 
-    private static void initial() {
-        test.setVisible(true);
+    @Override
+    public void paint(Graphics g) {
+        Graphics2D g2D = (Graphics2D) g;
+        ImageIcon bg = new ImageIcon("res/bgimage/bg1.png");
+        g2D.scale((float)1024/bg.getIconWidth(), (float)768/bg.getIconHeight());
+        g2D.drawImage(bg.getImage(), 0, 0, null);
+    }
 
-        centre.add(test);
+    private static void initial() {
 
     }
-    public static void run(final JFrame f, final int width, final int height){
+    public static void run(final HelloWindow f, final int width, final int height){
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -36,21 +39,8 @@ public class HelloWindow {
                 f.setSize(new Dimension(width, height));
                 f.setResizable(false);
                 f.setLayout(null);
-
+                f.repaint();
                 musThread.start();
-
-                JPanel bgShow = new JPanel() {
-                    @Override
-                    public void paint(Graphics g) {
-                        Graphics2D g2D = (Graphics2D) g;
-                        ImageIcon bg = new ImageIcon("res/bgimage/bg1.png");
-                        g2D.scale((float)width/bg.getIconWidth(), (float)height/bg.getIconHeight());
-                        g2D.drawImage(bg.getImage(), 0, 0, null);
-                    }
-                };
-                bgShow.setLayout(null);
-                bgShow.setBounds(0,0,width,height);
-                f.setContentPane(bgShow);
 
                 class MyMouseListener implements MouseListener {
                     @Override
@@ -69,12 +59,24 @@ public class HelloWindow {
 
                 f.addMouseListener(new MyMouseListener());
 
-                PVEMode.addActionListener(new ActionListener() {
+                offlineMode.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
-                        GoBang.run(new JFrame(), 800, 600, GAMEMODE_PVE);
+                        GoBang.run(new JFrame(), 955, 638, GAMEMODE_TEST);
+                    }
+                });
+
+                PVEMode.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        /*f.dispose();//点击按钮关闭窗口
+                        musThread.stop();//本方法已被弃用，不安全，但是这里能使
+                        GoBang.run(new JFrame(), 955, 638, GAMEMODE_PVE);
+                        */
+                        JOptionPane.showMessageDialog(new JOptionPane(), "暂未开放！",
+                                "噢！", JOptionPane.PLAIN_MESSAGE);
                     }
                 });
 
@@ -83,7 +85,7 @@ public class HelloWindow {
                     public void actionPerformed(ActionEvent e) {
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
-                        GoBang.run(new JFrame(), 800, 600, GAMEMODE_PVP);
+                        GoBang.run(new JFrame(), 955, 638, GAMEMODE_PVP);
                     }
                 });
 
@@ -94,10 +96,17 @@ public class HelloWindow {
                     }
                 });
 
+                offlineMode.setBounds(600, 160, 200, 60);
                 PVEMode.setBounds(600,280,200,60);
                 PVPMode.setBounds(600,400,200,60);
                 Exit.setBounds(600,520,200,60);
 
+                offlineMode.setVisible(true);
+                PVEMode.setVisible(true);
+                PVPMode.setVisible(true);
+                Exit.setVisible(true);
+
+                f.add(offlineMode);
                 f.add(PVEMode);
                 f.add(PVPMode);
                 f.add(Exit);
@@ -108,9 +117,11 @@ public class HelloWindow {
             }
         });
 
+
+
     }
     public static void main(String[] args) {
-        run(new JFrame(), 1024, 768);
+        run(new HelloWindow(), 1024, 768);
     }
 }
 

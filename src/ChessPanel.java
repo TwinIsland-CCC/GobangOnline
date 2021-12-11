@@ -63,6 +63,7 @@ public class ChessPanel extends JPanel {
                             history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
                                     (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
                             ContactPanel.infArea.setText("白棋回合");
+                            GoBang.downState.setText(GoBang.P1Name + "下了一个棋子，在(" + (indexOfX+1) + ", "+ (indexOfY+1) + ")位置！");
                         }
                         else {//白棋
                             //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
@@ -70,6 +71,7 @@ public class ChessPanel extends JPanel {
                             history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
                                     (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
                             ContactPanel.infArea.setText("黑棋回合");
+                            GoBang.downState.setText(GoBang.P2Name + "下了一个棋子，在(" + (indexOfX+1) + ", "+ (indexOfY+1) + ")位置！");
                         }
                         //sndThread.start();
                         repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
@@ -84,6 +86,7 @@ public class ChessPanel extends JPanel {
                     }
                     else {
                         fail.play(Sound.NOT_LOOP);
+                        GoBang.downState.setText("这个位置已经有棋子了！");
                     }
                     System.out.println(history);
                 }
@@ -129,6 +132,7 @@ public class ChessPanel extends JPanel {
         }
         history.clear();
         ContactPanel.infArea.setText("黑棋回合");
+        GoBang.downState.setText("Mr.CCC ");
     }
 
     public void GameOver() {

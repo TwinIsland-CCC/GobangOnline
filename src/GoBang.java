@@ -6,7 +6,9 @@ import java.awt.event.WindowEvent;
 
 public class GoBang {
 
-    private static final Font myFont = new Font("Times New Roman", Font.ITALIC, 16);
+    private static final Font myFont = new Font("宋体", Font.ITALIC, 16);
+    private static final Font chineseFont = new Font("宋体", Font.PLAIN, 16);
+
 
     private static final JButton btn0 = new JButton("0");
     private static final JButton btn1 = new JButton("1");
@@ -19,7 +21,8 @@ public class GoBang {
     private static final JPanel controlBar = new JPanel();//西侧栏，用于放置操作按钮，悔棋、认输、重新开始、退出游戏等
     private static final ContactPanel contactBar = new ContactPanel(new GridLayout(12,1), false);//东侧栏，用于交流和备用
 
-    public static final JLabel state = new JLabel("Mr.CCC ");
+    public static final JLabel downState = new JLabel("Mr.CCC ");//TODO 用于显示右下角信息，包含下棋下到哪一步等等
+    public static final JLabel upState = new JLabel("Mr.CCC ");//TODO 用于显示左上角信息，显示游戏模式和玩家信息
 
     private static final JButton undoBtn = new JButton("悔棋");
     private static final JButton surrenderBtn = new JButton("认输");
@@ -38,6 +41,9 @@ public class GoBang {
     public static boolean winState = false;//是否胜利
 
     public static int gameMode;
+
+    public static String P1Name = "CCC";
+    public static String P2Name = "Bot";
 
     //游戏界面，棋盘以及下棋
     private static final ChessPanel centre = new ChessPanel(null, false);
@@ -75,11 +81,11 @@ public class GoBang {
                 initial();
                 test.setVisible(true);
 
-                state.setFont(myFont);
-                state.setHorizontalAlignment(SwingConstants.RIGHT);
+                downState.setFont(myFont);
+                downState.setHorizontalAlignment(SwingConstants.RIGHT);
 
                 stateBar.setLayout(new BorderLayout());
-                stateBar.add(state);
+                stateBar.add(downState);
 
                 //对调试用按钮的设置，实际游戏中将禁用这些按钮
                 forceEnd.addActionListener(new ActionListener() {
@@ -97,7 +103,10 @@ public class GoBang {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         if (ChessPanel.steps > 0){
-                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你真的要悔棋吗？ "
+                            String type;
+                            if (ChessPanel.steps % 2 == 1) type = "黑棋";
+                            else type = "白棋";
+                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是"+type+"，你真的要悔棋吗？ "
                                     , "悔棋？", JOptionPane.YES_NO_OPTION);//TODO 如果是人人对战，询问对方是否同意
                             System.out.println(res);
                             if (res == 0){
@@ -151,7 +160,7 @@ public class GoBang {
                         System.out.println(res);
                         if (res == 0){
                             f.dispatchEvent(new WindowEvent(f,WindowEvent.WINDOW_CLOSING));//TODO 返回，现在是点击按钮关闭
-                            HelloWindow.run(new JFrame(), 1024, 768);
+                            HelloWindow.run(new HelloWindow(), 1024, 768);
                         }
                     }
                 });
@@ -163,6 +172,20 @@ public class GoBang {
 
                 contactBar.setLayout(new FlowLayout());
 
+                northBar.setLayout(new FlowLayout());
+                upState.setFont(chineseFont);
+                upState.setHorizontalTextPosition(JLabel.LEFT);
+
+                String gameType = "";
+                if (mode == HelloWindow.GAMEMODE_TEST) gameType = "单机模式";
+                else if (mode == HelloWindow.GAMEMODE_PVE) gameType = "人机对战";
+                else if (mode == HelloWindow.GAMEMODE_PVP) gameType = "联机对战";
+
+                gameType += "   玩家1：" + P1Name + "  |  玩家2：" + P2Name;
+
+                upState.setText(gameType);
+
+                northBar.add(upState);
                 northBar.add(forceEnd);
 
                 northBar.setPreferredSize(new Dimension(800,30));
