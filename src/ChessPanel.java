@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Arrays;
@@ -21,7 +23,7 @@ public class ChessPanel extends JPanel {
     });
     ImageIcon bgImage = new ImageIcon("res/other/chesspanel.png");
     private static final int radius = 17;//检测按下哪个位置的半径
-    private static final Position[][] chessPos = new Position[19][19];//四个哨兵
+    public static final Position[][] chessPos = new Position[19][19];//四个哨兵
     private static final Point[][] chessPoint = new Point[15][15];
     private static final ImageIcon blackChess = new ImageIcon("res/other/black.png");
     private static final ImageIcon whiteChess = new ImageIcon("res/other/white.png");
@@ -30,26 +32,14 @@ public class ChessPanel extends JPanel {
     private static int thisY = 22;
     private static int indexOfX = 0;
     private static int indexOfY = 0;
-    private static int steps = 0;
-    private static final Vector<Position> history = new Vector<>();
+    public static int steps = 0;
+    public static final Vector<Position> history = new Vector<>();//TODO 复盘和悔棋
 
     public ChessPanel(LayoutManager layout, boolean isDoubleBuffered) {
 
         super(layout, isDoubleBuffered);
-        for (int i = 0; i < 15; i++){//初始化
-            chessPoint[i] = new Point[15];
-            for (int j = 0; j < 15; j++){
-                chessPoint[i][j] = new Point(i*35+22 - radius, j*35+22 - radius);
-                //chessPoint[i][j] = new Point((i+1)*35+22, (j+1)*35+22);
-            }
-        }
-        for (int i = 0; i < 19; i++){//初始化
-            chessPos[i] = new Position[19];
-            for (int j = 0; j < 19; j++){
-                chessPos[i][j] = new Position();
-                chessPos[i][j].setType(GoBang.SPACE);
-            }
-        }
+
+        initial();
         System.out.println(Arrays.deepToString(chessPoint));
         setSize(new Dimension(535,535));
         addMouseListener(new MouseListener() {
@@ -65,32 +55,37 @@ public class ChessPanel extends JPanel {
 
                 //根据游戏模式，下面的代码会有所不同
                 //测试：单机模式
-
-                //TODO 如果不能在这里下，就不paint，出一个错误的音效
                 if (GoBang.gameMode == HelloWindow.GAMEMODE_TEST) {
                     if (chessPos[indexOfX][indexOfY].canPutChess()){
                         if (steps%2 == 0){//黑棋
-                            paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                            //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
                             chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
+                            history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                    (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
+                            ContactPanel.infArea.setText("白棋回合");
                         }
                         else {//白棋
-                            paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                            //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
                             chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
+                            history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                    (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
+                            ContactPanel.infArea.setText("黑棋回合");
                         }
                         //sndThread.start();
+                        repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
                         success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
                         steps++;
                         System.out.println(indexOfX + " " + indexOfY);
+
                         if (isWin(indexOfX, indexOfY)){
-                            gameover.play(Sound.NOT_LOOP);
                             GameOver();
                         }
-
+                        //repaint();
                     }
                     else {
                         fail.play(Sound.NOT_LOOP);
                     }
-
+                    System.out.println(history);
                 }
                 else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVE){
 
@@ -116,9 +111,36 @@ public class ChessPanel extends JPanel {
 
     }
 
-    private void GameOver() {
+    public void initial() {
+        steps = 0;
+        for (int i = 0; i < 15; i++){//初始化
+            chessPoint[i] = new Point[15];
+            for (int j = 0; j < 15; j++){
+                chessPoint[i][j] = new Point(i*35+22 - radius, j*35+22 - radius);
+                //chessPoint[i][j] = new Point((i+1)*35+22, (j+1)*35+22);
+            }
+        }
+        for (int i = 0; i < 19; i++){//初始化
+            chessPos[i] = new Position[19];
+            for (int j = 0; j < 19; j++){
+                chessPos[i][j] = new Position();
+                chessPos[i][j].setType(GoBang.SPACE);
+            }
+        }
+        history.clear();
+        ContactPanel.infArea.setText("黑棋回合");
+    }
 
-
+    public void GameOver() {
+        if (steps % 2 == 1){//黑棋胜
+            JOptionPane.showMessageDialog(new JOptionPane(), "黑棋获胜！",
+                    "游戏结束辣！", JOptionPane.PLAIN_MESSAGE);
+        }
+        else{//白棋胜
+            JOptionPane.showMessageDialog(new JOptionPane(), "白棋获胜！",
+                    "游戏结束辣！", JOptionPane.PLAIN_MESSAGE);
+        }
+        gameover.play(Sound.NOT_LOOP);
     }
 
 
@@ -128,6 +150,10 @@ public class ChessPanel extends JPanel {
         ImageIcon bg = new ImageIcon("res/bgimage/bg1.png");
         //g2D.scale((float)getWidth()/bg.getIconWidth(), (float)getHeight()/bg.getIconHeight());
         g2D.drawImage(bgImage.getImage(), 0, 0, null);
+        for (Position p: history) {
+            if (p.type == GoBang.BLACK) paintBlackChess(g, p.x, p.y);
+            else if (p.type == GoBang.WHITE) paintWhiteChess(g, p.x, p.y);
+        }
     }
 
     public void paintWhiteChess(Graphics g, double x, double y) {

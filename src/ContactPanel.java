@@ -3,6 +3,8 @@ import java.awt.*;
 
 public class ContactPanel extends JPanel {
 
+    private static final Font myFont = new Font("", Font.BOLD, 30);
+    public static final JTextArea infArea = new JTextArea("Test");//显示游戏中信息
     private static final JTextArea showArea = new JTextArea("Test");
     private static final JTextArea textArea = new JTextArea("Test");
     ImageIcon bgImage = new ImageIcon("res/other/chesspanel.png");
@@ -10,8 +12,16 @@ public class ContactPanel extends JPanel {
 
         super(layout, isDoubleBuffered);
         setPreferredSize(new Dimension(300,600));
-        showArea.setPreferredSize(new Dimension(300,200));
+        infArea.setPreferredSize(new Dimension(300,50));
+        showArea.setPreferredSize(new Dimension(300,400));
         textArea.setPreferredSize(new Dimension(300,20));
+        infArea.setEditable(false);
+        infArea.setFont(myFont);
+
+        showArea.setEditable(false);
+
+
+        add(infArea);
         add(showArea);
         add(textArea);
     }
