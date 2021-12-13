@@ -1,6 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * @author CCC
+ * 用于网络聊天以及显示部分信息
+ */
+
+
 public class ContactPanel extends JPanel {
 
     private static final Font myFont = new Font("", Font.BOLD, 30);

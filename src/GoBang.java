@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.util.Vector;
 
 public class GoBang {
 
@@ -28,19 +29,22 @@ public class GoBang {
     private static final JButton surrenderBtn = new JButton("认输");
     private static final JButton restartBtn = new JButton("重新开始");
     private static final JButton exitBtn = new JButton("退出游戏");
+    public static final JButton replayBtn = new JButton("复盘");
 
     //调试用按钮
     private static final JButton forceEnd = new JButton("强制结束游戏");
+    private static final JButton stepsChg = new JButton("步数增加224");
     private static final JLabel test = new JLabel("Mr.CCC");
 
     //游戏途中产生的信息
     public static final int BLACK = -1;
     public static final int SPACE = 0;
     public static final int WHITE = 1;
-    public static int steps = 0;//步数
-    public static boolean winState = false;//是否胜利
+/*    public static int steps = 0;//步数
+    public static boolean winState = false;//是否胜利*/
 
     public static int gameMode;
+    public static boolean gameIsOver = false;
 
     public static String P1Name = "CCC";
     public static String P2Name = "Bot";
@@ -49,13 +53,14 @@ public class GoBang {
     private static final ChessPanel centre = new ChessPanel(null, false);
 
 
-
+    //音乐线程
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
             Music.play("res/bgmusic/MareMaris.wav", 0.25, Music.LOOP);
         }
     });
+    //复盘线程
 
     private static final Music snd = new Music();
 
@@ -92,51 +97,64 @@ public class GoBang {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         GameOver();
-                        musThread.stop();
+                        //musThread.stop();
+                    }
+                });
+
+                stepsChg.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        ChessPanel.steps+=224;
+                        System.out.println("成功，现在的步数为："+ChessPanel.steps);
                     }
                 });
 
                 //对controlBar的设置
                 controlBar.setLayout(new GridLayout(12,1));
-
+                //悔棋
                 undoBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if (ChessPanel.steps > 0){
-                            String type;
-                            if (ChessPanel.steps % 2 == 1) type = "黑棋";
-                            else type = "白棋";
-                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是"+type+"，你真的要悔棋吗？ "
-                                    , "悔棋？", JOptionPane.YES_NO_OPTION);//TODO 如果是人人对战，询问对方是否同意
-                            System.out.println(res);
-                            if (res == 0){
-                                //TODO 悔棋
-                                ChessPanel.steps--;
-                                ChessPanel.chessPos[ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfX][ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfY].type = GoBang.SPACE;
-                                System.out.println(ChessPanel.history.size());
-                                ChessPanel.history.remove(ChessPanel.history.size() - 1);//TODO 越界？
-                                centre.repaint();
-                                System.out.println("Undo");
-                            }
-                        }
-                        else JOptionPane.showMessageDialog(new JOptionPane(), "什么也没有，你悔个什么劲呢？？？", "？？？", JOptionPane.ERROR_MESSAGE);
+                        if (!gameIsOver) {
+                            if (ChessPanel.steps > 0) {
+                                String type;
+                                if (ChessPanel.steps % 2 == 1) type = "黑棋";
+                                else type = "白棋";
+                                int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是" + type + "，你真的要悔棋吗？ "
+                                        , "悔棋？", JOptionPane.YES_NO_OPTION);//TODO 如果是人人对战，询问对方是否同意
+                                System.out.println(res);
+                                if (res == 0) {
+                                    //TODO 悔棋
+                                    ChessPanel.steps--;
+                                    ChessPanel.chessPos[ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfX][ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                                    System.out.println(ChessPanel.history.size());
+                                    ChessPanel.history.remove(ChessPanel.history.size() - 1);//TODO 越界？
+                                    centre.repaint();
+                                    System.out.println("Undo");
+
+                                }
+                            } else
+                                JOptionPane.showMessageDialog(new JOptionPane(), "什么也没有，你悔个什么劲呢？？？", "？？？", JOptionPane.ERROR_MESSAGE);
+                        }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
                     }
                 });
-
+                //投降
                 surrenderBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
-                                , "投降？", JOptionPane.YES_NO_OPTION);
-                        System.out.println(res);
-                        if (res == 0){
-                            //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
-                            System.out.println("Surrender");
-                            centre.GameOver();
-                        }
+                        if (!gameIsOver) {
+                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
+                                    , "投降？", JOptionPane.YES_NO_OPTION);
+                            System.out.println(res);
+                            if (res == 0){
+                                //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
+                                System.out.println("Surrender");
+                                centre.GameOver(ChessPanel.steps%2);
+                            }
+                        }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
                     }
                 });
-
+                //重开
                 restartBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {//TODO 只在人机对战有效
@@ -145,13 +163,15 @@ public class GoBang {
                         System.out.println(res);
                         if (res == 0){
                             //TODO 重新开始
+                            gameIsOver = false;
+                            replayBtn.setVisible(false);
                             centre.initial();
                             centre.repaint();
                             System.out.println("Restart");
                         }
                     }
                 });
-
+                //退出
                 exitBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -164,11 +184,34 @@ public class GoBang {
                         }
                     }
                 });
-                //
+                //复盘
+                replayBtn.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "复盘可以看到你上一盘游戏中所有行动。"
+                                , "是否进行复盘？", JOptionPane.YES_NO_OPTION);
+                        System.out.println(res);
+                        if (res == 0){
+                            //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
+                            System.out.println("replay");
+                            replayBtn.setVisible(false);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    centre.replay();
+                                }
+                            }).start();
+                        }
+                    }
+                });
+
                 controlBar.add(undoBtn);
                 controlBar.add(surrenderBtn);
                 controlBar.add(restartBtn);
                 controlBar.add(exitBtn);
+                controlBar.add(replayBtn);
+
+                replayBtn.setVisible(false);
 
                 contactBar.setLayout(new FlowLayout());
 
@@ -187,6 +230,7 @@ public class GoBang {
 
                 northBar.add(upState);
                 northBar.add(forceEnd);
+                northBar.add(stepsChg);
 
                 northBar.setPreferredSize(new Dimension(800,30));
                 controlBar.setPreferredSize(new Dimension(100,600));
@@ -208,9 +252,13 @@ public class GoBang {
     }
 
     //游戏结束
-    private static void GameOver() {
-        musThread.stop();
+    public static void GameOver() {
+        //musThread.stop();
+        replayBtn.setVisible(true);
+        gameIsOver = true;
     }
+
+
 
     public static void main(String[] args) {
         run(new JFrame(), 955, 638, HelloWindow.GAMEMODE_TEST);//调试时默认使用调试模式

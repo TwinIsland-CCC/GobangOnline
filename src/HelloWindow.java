@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class HelloWindow extends JFrame {
+
     private static final Thread musThread = new Thread(new Runnable() {//背景音乐播放
         @Override
         public void run() {
@@ -18,6 +19,7 @@ public class HelloWindow extends JFrame {
     public static final int GAMEMODE_PVE = 1;
     public static final int GAMEMODE_PVP = 0;
     public static final int GAMEMODE_TEST = 2;
+    public static final int GAMEMODE_REPLAY = 3;
 
     @Override
     public void paint(Graphics g) {
@@ -83,8 +85,14 @@ public class HelloWindow extends JFrame {
                 PVPMode.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+
+                        //TODO 加个窗口输入ip和端口信息，实现网络通信
+
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
+
+
+
                         GoBang.run(new JFrame(), 955, 638, GAMEMODE_PVP);
                     }
                 });

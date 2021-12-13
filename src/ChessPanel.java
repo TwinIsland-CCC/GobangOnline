@@ -7,10 +7,15 @@ import java.awt.event.MouseListener;
 import java.util.Arrays;
 import java.util.Vector;
 
+/**
+ * @author CCC
+ * 下棋的主面版
+ */
+
 public class ChessPanel extends JPanel {
     //边距：22
     //棋盘格间距：35
-    private static final Sound success = new Sound("res/audio/success.wav");
+    public static final Sound success = new Sound("res/audio/success.wav");
     private static final Sound fail = new Sound("res/audio/fail.wav");
     private static final Sound gameover = new Sound("res/audio/gameover.wav");
 
@@ -35,6 +40,9 @@ public class ChessPanel extends JPanel {
     public static int steps = 0;
     public static final Vector<Position> history = new Vector<>();//TODO 复盘和悔棋
 
+    //TODO 结束时不能再下棋
+
+
     public ChessPanel(LayoutManager layout, boolean isDoubleBuffered) {
 
         super(layout, isDoubleBuffered);
@@ -50,56 +58,57 @@ public class ChessPanel extends JPanel {
                 thisPoint.y = thisY = e.getY();
                 indexOfX = (thisX - 22) / 35;
                 indexOfY = (thisY - 22) / 35;
-                if ((thisX - 22)%35 > radius) indexOfX++;
-                if ((thisY - 22)%35 > radius) indexOfY++;//根据棋盘格式设置位置，一次性代码
+                if ((thisX - 22) % 35 > radius) indexOfX++;
+                if ((thisY - 22) % 35 > radius) indexOfY++;//根据棋盘格式设置位置，一次性代码
 
                 //根据游戏模式，下面的代码会有所不同
                 //测试：单机模式
-                if (GoBang.gameMode == HelloWindow.GAMEMODE_TEST) {
-                    if (chessPos[indexOfX][indexOfY].canPutChess()){
-                        if (steps%2 == 0){//黑棋
-                            //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                            chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
-                            history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                    (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
-                            ContactPanel.infArea.setText("白棋回合");
-                            GoBang.downState.setText(GoBang.P1Name + "下了一个棋子，在(" + (indexOfX+1) + ", "+ (indexOfY+1) + ")位置！");
-                        }
-                        else {//白棋
-                            //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                            chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
-                            history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                    (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
-                            ContactPanel.infArea.setText("黑棋回合");
-                            GoBang.downState.setText(GoBang.P2Name + "下了一个棋子，在(" + (indexOfX+1) + ", "+ (indexOfY+1) + ")位置！");
-                        }
-                        //sndThread.start();
-                        repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
-                        success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
-                        steps++;
-                        System.out.println(indexOfX + " " + indexOfY);
+                if(!GoBang.gameIsOver) {
+                    if (GoBang.gameMode == HelloWindow.GAMEMODE_TEST) {
+                        if (chessPos[indexOfX][indexOfY].canPutChess()) {
+                            if (steps % 2 == 0) {//黑棋
+                                //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                                chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
+                                history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
+                                ContactPanel.infArea.setText("白棋回合");
+                                GoBang.downState.setText(GoBang.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                            } else {//白棋
+                                //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                                chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
+                                history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
+                                ContactPanel.infArea.setText("黑棋回合");
+                                GoBang.downState.setText(GoBang.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                            }
+                            //sndThread.start();
+                            repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
+                            success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
 
-                        if (isWin(indexOfX, indexOfY)){
-                            GameOver();
+                            steps++;//如果步数到达225则和棋
+                            if (steps >= 225) {
+                                GameOver(-1);//-1则为和棋
+                                return;
+                            }
+                            System.out.println(indexOfX + " " + indexOfY);
+
+                            if (isWin(indexOfX, indexOfY)) {
+                                GameOver(steps % 2);//1为黑棋胜，0为白棋胜
+                            }
+                            //repaint();
+                        } else {
+                            fail.play(Sound.NOT_LOOP);
+                            GoBang.downState.setText("这个位置已经有棋子了！");
                         }
-                        //repaint();
+                        System.out.println(history);
+                    } else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVE) {
+                        //TODO 人机对战
+
+                    } else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVP) {
+                        //TODO 联网对战
+
                     }
-                    else {
-                        fail.play(Sound.NOT_LOOP);
-                        GoBang.downState.setText("这个位置已经有棋子了！");
-                    }
-                    System.out.println(history);
                 }
-                else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVE){
-
-                }
-                else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVP){
-
-                }
-
-                //TODO 人机对战
-                //TODO 联网对战
-
             }
 
             @Override
@@ -135,16 +144,34 @@ public class ChessPanel extends JPanel {
         GoBang.downState.setText("Mr.CCC ");
     }
 
-    public void GameOver() {
-        if (steps % 2 == 1){//黑棋胜
+    public void GameOver(int Player) {
+        if (Player == 1){//黑棋胜
             JOptionPane.showMessageDialog(new JOptionPane(), "黑棋获胜！",
                     "游戏结束辣！", JOptionPane.PLAIN_MESSAGE);
+            GoBang.downState.setText("黑棋获胜！");
+            ContactPanel.infArea.setText("黑棋获胜！");
+
         }
-        else{//白棋胜
+        else if(Player == 0){//白棋胜
             JOptionPane.showMessageDialog(new JOptionPane(), "白棋获胜！",
                     "游戏结束辣！", JOptionPane.PLAIN_MESSAGE);
+            GoBang.downState.setText("白棋获胜！");
+            ContactPanel.infArea.setText("白棋获胜！");
         }
-        gameover.play(Sound.NOT_LOOP);
+        else if(Player == -1){
+            JOptionPane.showMessageDialog(new JOptionPane(), "和棋！",
+                    "游戏结束辣！", JOptionPane.PLAIN_MESSAGE);
+            GoBang.downState.setText("平局！");
+            ContactPanel.infArea.setText("平局！");
+        }
+        GoBang.GameOver();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                gameover.play(Sound.NOT_LOOP);//TODO 考虑增加线程
+            }
+        }).start();
+
     }
 
 
@@ -174,9 +201,9 @@ public class ChessPanel extends JPanel {
         int currentType = chessPos[row][col].type;
         int startOfSearchRow = row - 4;
         int startOfSearchCol = col - 4;
-        if (startOfSearchRow < 0) startOfSearchRow = 1;
+        if (startOfSearchRow < 0) startOfSearchRow = 0;
         else if (startOfSearchRow > 6) startOfSearchRow = 6;
-        if (startOfSearchCol < 0) startOfSearchCol = 1;
+        if (startOfSearchCol < 0) startOfSearchCol = 0;
         else if (startOfSearchCol > 6) startOfSearchCol = 6;
         for (int i = startOfSearchRow; i < startOfSearchRow + 5; i++){
             for (int j = startOfSearchCol; j < startOfSearchCol + 5; j++){
@@ -204,4 +231,18 @@ public class ChessPanel extends JPanel {
         return false;
     }
 
+    public void replay() {
+        Vector<Position> temp = new Vector<>();
+        for (Position p : ChessPanel.history){
+            temp.add(new Position(p.x,p.y,p.type,p.indexOfX,p.indexOfY));
+        }
+        ChessPanel.history.clear();
+        repaint();
+        for(Position p : temp){
+            ChessPanel.history.add(p);
+            ChessPanel.success.play(Sound.NOT_LOOP);
+            repaint();
+        }
+        GoBang.replayBtn.setVisible(true);
+    }
 }

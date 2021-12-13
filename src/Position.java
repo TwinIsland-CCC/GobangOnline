@@ -12,6 +12,18 @@ public class Position {
         indexOfX = inx;
         indexOfY = iny;
     }
+
+    @Override
+    public String toString() {
+        return "Position{" +
+                "type=" + type +
+                ", x=" + x +
+                ", y=" + y +
+                ", indexOfX=" + indexOfX +
+                ", indexOfY=" + indexOfY +
+                '}';
+    }
+
     public boolean canPutChess(){
         return type == GoBang.SPACE;
     }
