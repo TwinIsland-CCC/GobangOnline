@@ -20,7 +20,7 @@ public class GoBang {
     private static final JPanel northBar = new JPanel();//北侧栏，用于显示状态以及备用，并且用于调试
     private static final JPanel stateBar = new JPanel();//南侧栏，用于放置一个状态栏，显示”谁在哪下了棋子“等信息
     private static final JPanel controlBar = new JPanel();//西侧栏，用于放置操作按钮，悔棋、认输、重新开始、退出游戏等
-    private static final ContactPanel contactBar = new ContactPanel(new GridLayout(12,1), false);//东侧栏，用于交流和备用
+    public static final ContactPanel contactBar = new ContactPanel(new GridLayout(12,1), false);//东侧栏，用于交流和备用
 
     public static final JLabel downState = new JLabel("Mr.CCC ");//TODO 用于显示右下角信息，包含下棋下到哪一步等等
     public static final JLabel upState = new JLabel("Mr.CCC ");//TODO 用于显示左上角信息，显示游戏模式和玩家信息
@@ -43,14 +43,8 @@ public class GoBang {
 /*    public static int steps = 0;//步数
     public static boolean winState = false;//是否胜利*/
 
-    public static int gameMode;
-    public static boolean gameIsOver = false;
-
-    public static String P1Name = "CCC";
-    public static String P2Name = "Bot";
-
     //游戏界面，棋盘以及下棋
-    private static final ChessPanel centre = new ChessPanel(null, false);
+    public static final ChessPanel centre = new ChessPanel(null, false);
 
 
     //音乐线程
@@ -71,7 +65,7 @@ public class GoBang {
 
     public static void run(final JFrame f, final int width, final int height, int mode){
         //mode为模式选择
-        gameMode = mode;
+        Vars.gameMode = mode;
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -104,8 +98,8 @@ public class GoBang {
                 stepsChg.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        ChessPanel.steps+=224;
-                        System.out.println("成功，现在的步数为："+ChessPanel.steps);
+                        Vars.steps+=224;
+                        System.out.println("成功，现在的步数为："+Vars.steps);
                     }
                 });
 
@@ -115,20 +109,20 @@ public class GoBang {
                 undoBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if (!gameIsOver) {
-                            if (ChessPanel.steps > 0) {
+                        if (!Vars.gameIsOver) {
+                            if (Vars.steps > 0) {
                                 String type;
-                                if (ChessPanel.steps % 2 == 1) type = "黑棋";
+                                if (Vars.steps % 2 == 1) type = "黑棋";
                                 else type = "白棋";
                                 int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是" + type + "，你真的要悔棋吗？ "
                                         , "悔棋？", JOptionPane.YES_NO_OPTION);//TODO 如果是人人对战，询问对方是否同意
                                 System.out.println(res);
                                 if (res == 0) {
                                     //TODO 悔棋
-                                    ChessPanel.steps--;
-                                    ChessPanel.chessPos[ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfX][ChessPanel.history.get(ChessPanel.history.size() - 1).indexOfY].type = GoBang.SPACE;
-                                    System.out.println(ChessPanel.history.size());
-                                    ChessPanel.history.remove(ChessPanel.history.size() - 1);//TODO 越界？
+                                    Vars.steps--;
+                                    Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                                    System.out.println(Vars.history.size());
+                                    Vars.history.remove(Vars.history.size() - 1);//TODO 越界？
                                     centre.repaint();
                                     System.out.println("Undo");
 
@@ -142,14 +136,14 @@ public class GoBang {
                 surrenderBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if (!gameIsOver) {
+                        if (!Vars.gameIsOver) {
                             int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
                                     , "投降？", JOptionPane.YES_NO_OPTION);
                             System.out.println(res);
                             if (res == 0){
                                 //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
                                 System.out.println("Surrender");
-                                centre.GameOver(ChessPanel.steps%2);
+                                centre.GameOver(Vars.steps%2);
                             }
                         }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
                     }
@@ -163,7 +157,7 @@ public class GoBang {
                         System.out.println(res);
                         if (res == 0){
                             //TODO 重新开始
-                            gameIsOver = false;
+                            Vars.gameIsOver = false;
                             replayBtn.setVisible(false);
                             centre.initial();
                             centre.repaint();
@@ -213,18 +207,18 @@ public class GoBang {
 
                 replayBtn.setVisible(false);
 
-                contactBar.setLayout(new FlowLayout());
+                //contactBar.setLayout(new GridLayout(5,1));
 
                 northBar.setLayout(new FlowLayout());
                 upState.setFont(chineseFont);
                 upState.setHorizontalTextPosition(JLabel.LEFT);
 
                 String gameType = "";
-                if (mode == HelloWindow.GAMEMODE_TEST) gameType = "单机模式";
-                else if (mode == HelloWindow.GAMEMODE_PVE) gameType = "人机对战";
-                else if (mode == HelloWindow.GAMEMODE_PVP) gameType = "联机对战";
+                if (mode == Vars.GAMEMODE_TEST) gameType = "单机模式";
+                else if (mode == Vars.GAMEMODE_PVE) gameType = "人机对战";
+                else if (mode == Vars.GAMEMODE_PVP) gameType = "联机对战";
 
-                gameType += "   玩家1：" + P1Name + "  |  玩家2：" + P2Name;
+                gameType += "   玩家1：" + Vars.P1Name + "  |  玩家2：" + Vars.P2Name;
 
                 upState.setText(gameType);
 
@@ -255,13 +249,13 @@ public class GoBang {
     public static void GameOver() {
         //musThread.stop();
         replayBtn.setVisible(true);
-        gameIsOver = true;
+        Vars.gameIsOver = true;
     }
 
 
 
     public static void main(String[] args) {
-        run(new JFrame(), 955, 638, HelloWindow.GAMEMODE_TEST);//调试时默认使用调试模式
+        run(new JFrame(), 955, 638, Vars.GAMEMODE_TEST);//调试时默认使用调试模式
     }
 
 }

@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Arrays;
@@ -28,7 +26,7 @@ public class ChessPanel extends JPanel {
     });
     ImageIcon bgImage = new ImageIcon("res/other/chesspanel.png");
     private static final int radius = 17;//检测按下哪个位置的半径
-    public static final Position[][] chessPos = new Position[19][19];//四个哨兵
+
     private static final Point[][] chessPoint = new Point[15][15];
     private static final ImageIcon blackChess = new ImageIcon("res/other/black.png");
     private static final ImageIcon whiteChess = new ImageIcon("res/other/white.png");
@@ -37,11 +35,6 @@ public class ChessPanel extends JPanel {
     private static int thisY = 22;
     private static int indexOfX = 0;
     private static int indexOfY = 0;
-    public static int steps = 0;
-    public static final Vector<Position> history = new Vector<>();//TODO 复盘和悔棋
-
-    //TODO 结束时不能再下棋
-
 
     public ChessPanel(LayoutManager layout, boolean isDoubleBuffered) {
 
@@ -63,52 +56,7 @@ public class ChessPanel extends JPanel {
 
                 //根据游戏模式，下面的代码会有所不同
                 //测试：单机模式
-                if(!GoBang.gameIsOver) {
-                    if (GoBang.gameMode == HelloWindow.GAMEMODE_TEST) {
-                        if (chessPos[indexOfX][indexOfY].canPutChess()) {
-                            if (steps % 2 == 0) {//黑棋
-                                //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                                chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
-                                history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
-                                ContactPanel.infArea.setText("白棋回合");
-                                GoBang.downState.setText(GoBang.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
-                            } else {//白棋
-                                //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                                chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
-                                history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
-                                ContactPanel.infArea.setText("黑棋回合");
-                                GoBang.downState.setText(GoBang.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
-                            }
-                            //sndThread.start();
-                            repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
-                            success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
-
-                            steps++;//如果步数到达225则和棋
-                            if (steps >= 225) {
-                                GameOver(-1);//-1则为和棋
-                                return;
-                            }
-                            System.out.println(indexOfX + " " + indexOfY);
-
-                            if (isWin(indexOfX, indexOfY)) {
-                                GameOver(steps % 2);//1为黑棋胜，0为白棋胜
-                            }
-                            //repaint();
-                        } else {
-                            fail.play(Sound.NOT_LOOP);
-                            GoBang.downState.setText("这个位置已经有棋子了！");
-                        }
-                        System.out.println(history);
-                    } else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVE) {
-                        //TODO 人机对战
-
-                    } else if (GoBang.gameMode == HelloWindow.GAMEMODE_PVP) {
-                        //TODO 联网对战
-
-                    }
-                }
+                putChess(indexOfX, indexOfY);
             }
 
             @Override
@@ -124,7 +72,7 @@ public class ChessPanel extends JPanel {
     }
 
     public void initial() {
-        steps = 0;
+        Vars.steps = 0;
         for (int i = 0; i < 15; i++){//初始化
             chessPoint[i] = new Point[15];
             for (int j = 0; j < 15; j++){
@@ -133,13 +81,13 @@ public class ChessPanel extends JPanel {
             }
         }
         for (int i = 0; i < 19; i++){//初始化
-            chessPos[i] = new Position[19];
+            Vars.chessPos[i] = new Position[19];
             for (int j = 0; j < 19; j++){
-                chessPos[i][j] = new Position();
-                chessPos[i][j].setType(GoBang.SPACE);
+                Vars.chessPos[i][j] = new Position();
+                Vars.chessPos[i][j].setType(GoBang.SPACE);
             }
         }
-        history.clear();
+        Vars.history.clear();
         ContactPanel.infArea.setText("黑棋回合");
         GoBang.downState.setText("Mr.CCC ");
     }
@@ -181,7 +129,7 @@ public class ChessPanel extends JPanel {
         ImageIcon bg = new ImageIcon("res/bgimage/bg1.png");
         //g2D.scale((float)getWidth()/bg.getIconWidth(), (float)getHeight()/bg.getIconHeight());
         g2D.drawImage(bgImage.getImage(), 0, 0, null);
-        for (Position p: history) {
+        for (Position p: Vars.history) {
             if (p.type == GoBang.BLACK) paintBlackChess(g, p.x, p.y);
             else if (p.type == GoBang.WHITE) paintWhiteChess(g, p.x, p.y);
         }
@@ -198,7 +146,7 @@ public class ChessPanel extends JPanel {
     }
 
     public boolean isWin(int row, int col){//思路：每下完一个棋子，扫描以它为中心的八个方向是否有另外四个同类型棋子与它组成5个连子。
-        int currentType = chessPos[row][col].type;
+        int currentType = Vars.chessPos[row][col].type;
         int startOfSearchRow = row - 4;
         int startOfSearchCol = col - 4;
         if (startOfSearchRow < 0) startOfSearchRow = 0;
@@ -207,22 +155,22 @@ public class ChessPanel extends JPanel {
         else if (startOfSearchCol > 6) startOfSearchCol = 6;
         for (int i = startOfSearchRow; i < startOfSearchRow + 5; i++){
             for (int j = startOfSearchCol; j < startOfSearchCol + 5; j++){
-                boolean b1 = currentType == chessPos[i][j+1].type && currentType == chessPos[i][j+2].type
-                        && currentType == chessPos[i][j+3].type && currentType == chessPos[i][j+4].type && currentType == chessPos[i][j].type;
-                boolean b2 = currentType == chessPos[i+1][j].type && currentType == chessPos[i+2][j].type
-                        && currentType == chessPos[i+3][j].type && currentType == chessPos[i+4][j].type && currentType == chessPos[i][j].type;
-                boolean b3 = currentType == chessPos[i+1][j+1].type && currentType == chessPos[i+2][j+2].type
-                        && currentType == chessPos[i+3][j+3].type && currentType == chessPos[i+4][j+4].type && currentType == chessPos[i][j].type;
-                boolean b4 = currentType == chessPos[i+4][j].type && currentType == chessPos[i+3][j+1].type
-                        && currentType == chessPos[i+2][j+2].type && currentType == chessPos[i+1][j+3].type && currentType == chessPos[i][j+4].type;
-                boolean b5 = currentType == chessPos[i][j+5].type && currentType == chessPos[i][j+6].type
-                        && currentType == chessPos[i][j+7].type && currentType == chessPos[i][j+8].type && currentType == chessPos[i][j+4].type;
-                boolean b6 = currentType == chessPos[i+5][j].type && currentType == chessPos[i+6][j].type
-                        && currentType == chessPos[i+7][j].type && currentType == chessPos[i+8][j].type && currentType == chessPos[i+4][j].type;
-                boolean b7 = currentType == chessPos[i+4][j+1].type && currentType == chessPos[i+4][j+2].type
-                        && currentType == chessPos[i+4][j+3].type && currentType == chessPos[i+4][j+4].type && currentType == chessPos[i+4][j].type;
-                boolean b8 = currentType == chessPos[i+1][j+4].type && currentType == chessPos[i+2][j+4].type
-                        && currentType == chessPos[i+3][j+4].type && currentType == chessPos[i+4][j+4].type && currentType == chessPos[i][j+4].type;
+                boolean b1 = currentType == Vars.chessPos[i][j+1].type && currentType == Vars.chessPos[i][j+2].type
+                        && currentType == Vars.chessPos[i][j+3].type && currentType == Vars.chessPos[i][j+4].type && currentType == Vars.chessPos[i][j].type;
+                boolean b2 = currentType == Vars.chessPos[i+1][j].type && currentType == Vars.chessPos[i+2][j].type
+                        && currentType == Vars.chessPos[i+3][j].type && currentType == Vars.chessPos[i+4][j].type && currentType == Vars.chessPos[i][j].type;
+                boolean b3 = currentType == Vars.chessPos[i+1][j+1].type && currentType == Vars.chessPos[i+2][j+2].type
+                        && currentType == Vars.chessPos[i+3][j+3].type && currentType == Vars.chessPos[i+4][j+4].type && currentType == Vars.chessPos[i][j].type;
+                boolean b4 = currentType == Vars.chessPos[i+4][j].type && currentType == Vars.chessPos[i+3][j+1].type
+                        && currentType == Vars.chessPos[i+2][j+2].type && currentType == Vars.chessPos[i+1][j+3].type && currentType == Vars.chessPos[i][j+4].type;
+                boolean b5 = currentType == Vars.chessPos[i][j+5].type && currentType == Vars.chessPos[i][j+6].type
+                        && currentType == Vars.chessPos[i][j+7].type && currentType == Vars.chessPos[i][j+8].type && currentType == Vars.chessPos[i][j+4].type;
+                boolean b6 = currentType == Vars.chessPos[i+5][j].type && currentType == Vars.chessPos[i+6][j].type
+                        && currentType == Vars.chessPos[i+7][j].type && currentType == Vars.chessPos[i+8][j].type && currentType == Vars.chessPos[i+4][j].type;
+                boolean b7 = currentType == Vars.chessPos[i+4][j+1].type && currentType == Vars.chessPos[i+4][j+2].type
+                        && currentType == Vars.chessPos[i+4][j+3].type && currentType == Vars.chessPos[i+4][j+4].type && currentType == Vars.chessPos[i+4][j].type;
+                boolean b8 = currentType == Vars.chessPos[i+1][j+4].type && currentType == Vars.chessPos[i+2][j+4].type
+                        && currentType == Vars.chessPos[i+3][j+4].type && currentType == Vars.chessPos[i+4][j+4].type && currentType == Vars.chessPos[i][j+4].type;
                 if (b1||b2||b3||b4||b5||b6||b7||b8){
                     return true;
                 }
@@ -233,16 +181,67 @@ public class ChessPanel extends JPanel {
 
     public void replay() {
         Vector<Position> temp = new Vector<>();
-        for (Position p : ChessPanel.history){
+        for (Position p : Vars.history){
             temp.add(new Position(p.x,p.y,p.type,p.indexOfX,p.indexOfY));
         }
-        ChessPanel.history.clear();
+        Vars.history.clear();
         repaint();
         for(Position p : temp){
-            ChessPanel.history.add(p);
+            Vars.history.add(p);
             ChessPanel.success.play(Sound.NOT_LOOP);
             repaint();
         }
         GoBang.replayBtn.setVisible(true);
+    }
+
+    public void putChess(int row, int col) {
+        indexOfX = row;
+        indexOfY = col;
+        if(!Vars.gameIsOver) {
+            if (Vars.gameMode == Vars.GAMEMODE_TEST) {
+                if (Vars.chessPos[indexOfX][indexOfY].canPutChess()) {
+                    if (Vars.steps % 2 == 0) {//黑棋
+                        //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                        Vars.chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
+                        Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
+                        ContactPanel.infArea.setText("白棋回合");
+                        GoBang.downState.setText(Vars.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                    } else {//白棋
+                        //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                        Vars.chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
+                        Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                                (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
+                        ContactPanel.infArea.setText("黑棋回合");
+                        GoBang.downState.setText(Vars.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                    }
+                    //sndThread.start();
+                    repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
+                    success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
+
+                    Vars.steps++;//如果步数到达225则和棋
+                    if (Vars.steps >= 225) {
+                        GameOver(-1);//-1则为和棋
+                        return;
+                    }
+                    System.out.println(indexOfX + " " + indexOfY);
+
+                    if (isWin(indexOfX, indexOfY)) {
+                        GameOver(Vars.steps % 2);//1为黑棋胜，0为白棋胜
+                    }
+                    //repaint();
+                } else {
+                    fail.play(Sound.NOT_LOOP);
+                    GoBang.downState.setText("这个位置已经有棋子了！");
+                }
+                System.out.println(Vars.history);
+            } else if (Vars.gameMode == Vars.GAMEMODE_PVE) {
+                //TODO 人机对战
+
+            } else if (Vars.gameMode == Vars.GAMEMODE_PVP) {
+                //TODO 联网对战
+
+            }
+        }
     }
 }

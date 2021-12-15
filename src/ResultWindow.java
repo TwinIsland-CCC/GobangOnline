@@ -47,7 +47,7 @@ public class ResultWindow {
 
     }
     public static void main(String[] args) {
-        run(new JFrame(), 300, 400, HelloWindow.GAMEMODE_TEST, GoBang.BLACK);
+        run(new JFrame(), 300, 400, Vars.GAMEMODE_TEST, GoBang.BLACK);
     }
 
 }
