@@ -9,6 +9,8 @@ public class Vars {
 
     public static final Network net = new Network();
 
+    public static final LinkPanel link = new LinkPanel();
+
     public static int gameMode;
     public static boolean gameIsOver = false;
 

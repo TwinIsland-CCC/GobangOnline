@@ -11,9 +11,6 @@ public class HelloWindow extends JFrame {
         }
     });
 
-    private static final JTextField nameChg = new JTextField("Mr.CCC");
-    private static final JButton setName = new JButton("改名");
-
     private static final JButton offlineMode = new JButton("OfflineMode");
     private static final JButton PVEMode = new JButton("PVEMode");
     private static final JButton PVPMode = new JButton("PVPMode");
@@ -90,10 +87,10 @@ public class HelloWindow extends JFrame {
 
                         f.dispose();//点击按钮关闭窗口
                         musThread.stop();//本方法已被弃用，不安全，但是这里能使
+                        LinkPanel.run();
 
 
-
-                        GoBang.run(new JFrame(), 955, 638, Vars.GAMEMODE_PVP);
+                        //GoBang.run(new JFrame(), 955, 638, Vars.GAMEMODE_PVP);
                     }
                 });
 
@@ -104,22 +101,6 @@ public class HelloWindow extends JFrame {
                     }
                 });
 
-                JPanel nameChgPane = new JPanel(new FlowLayout());
-
-                setName.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Vars.P1Name = nameChg.getText();
-                        System.out.println("成功，现在的名字是："+Vars.P1Name);
-
-                    }
-                });
-
-                nameChgPane.add(nameChg);
-                nameChgPane.add(setName);
-
-                nameChg.setPreferredSize(new Dimension(170, 20));
-                nameChgPane.setBounds(100,100,200,60);
 
                 offlineMode.setBounds(600, 160, 200, 60);
                 PVEMode.setBounds(600,280,200,60);
@@ -130,13 +111,13 @@ public class HelloWindow extends JFrame {
                 PVEMode.setVisible(true);
                 PVPMode.setVisible(true);
                 Exit.setVisible(true);
-                nameChgPane.setVisible(true);
+
 
                 f.add(offlineMode);
                 f.add(PVEMode);
                 f.add(PVPMode);
                 f.add(Exit);
-                f.add(nameChgPane);
+
 
                 initial();
 

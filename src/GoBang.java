@@ -75,7 +75,7 @@ public class GoBang {
                 f.setResizable(false);
                 f.setLayout(new BorderLayout(3,3));
 
-                musThread.start();
+                //musThread.start();
 
                 initial();
                 test.setVisible(true);
@@ -218,6 +218,8 @@ public class GoBang {
                 else if (mode == Vars.GAMEMODE_PVE) gameType = "人机对战";
                 else if (mode == Vars.GAMEMODE_PVP) gameType = "联机对战";
 
+                System.out.println(Vars.P2Name);
+
                 gameType += "   玩家1：" + Vars.P1Name + "  |  玩家2：" + Vars.P2Name;
 
                 upState.setText(gameType);
@@ -252,6 +254,10 @@ public class GoBang {
         Vars.gameIsOver = true;
     }
 
+
+    public static void run(int mode){
+        run(new JFrame(), 955, 638, mode);//调试时默认使用调试模式
+    }
 
 
     public static void main(String[] args) {

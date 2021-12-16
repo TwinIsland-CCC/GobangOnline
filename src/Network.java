@@ -11,6 +11,7 @@ public class Network {
     protected BufferedReader in = null;
     public static final String CMD_PUT_CHESS = "@@@";
     public static final String CMD_CONTACT = "###";
+    private static final String CMD_INITIAL = "$$$";
     public static final int CMD_LENGTH = 3;
     public void listen(final String ip){
         new Thread(new Runnable() {
@@ -22,6 +23,7 @@ public class Network {
                     out = new PrintWriter(s.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
                     LinkPanel.infHint.append("已连接到" + LinkPanel.ipInput.getText()+"，正在等待玩家连接......\n");
+                    LinkPanel.linkFlag = true;
                     startReadThread();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -40,6 +42,7 @@ public class Network {
                     out = new PrintWriter(s.getOutputStream(), true);
                     in = new BufferedReader(new InputStreamReader(s.getInputStream()));
                     LinkPanel.infHint.append("连接成功\n");
+                    LinkPanel.linkFlag = true;
                     startReadThread();
 
                 } catch (IOException e) {
@@ -82,9 +85,18 @@ public class Network {
 
         }
         else if (line.startsWith(CMD_CONTACT)){
+            //聊天指令
             line = line.substring(CMD_LENGTH);
             String output = Vars.P1Name +": "+line;
             GoBang.contactBar.putMessage(output);
+        }
+        else if(line.startsWith(CMD_INITIAL)){
+            line = line.substring(CMD_LENGTH);
+            Vars.P2Name = line;
+            System.out.println("成功，P2Name = " + Vars.P2Name);
+        }
+        else {
+            System.out.println("无效的指令，请检查程序");
         }
     }
 
@@ -93,5 +105,10 @@ public class Network {
     }
     public void sendMessage(String message){
         out.println(CMD_CONTACT+message);
+    }
+
+    public void initial(){//用于对局开始时为对方传输我方信息
+        out.println(CMD_INITIAL+Vars.P1Name);//传输名字
+        //其他可选：段位，胜率，对局数等
     }
 }

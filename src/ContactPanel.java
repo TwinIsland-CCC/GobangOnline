@@ -13,8 +13,8 @@ public class ContactPanel extends JPanel {
 
     private static final Font myFont = new Font("", Font.BOLD, 30);
     public static final JTextArea infArea = new JTextArea("Test");//显示游戏中信息
-    private static final JTextArea showArea = new JTextArea("Test");
-    private static final JTextArea textArea = new JTextArea("Test");
+    private static final JTextArea showArea = new JTextArea("游戏开始！\n");
+    private static final JTextArea textArea = new JTextArea("测试测试测试测试");
     private static final JScrollPane showScrollPane = new JScrollPane(showArea);
     private static final JScrollPane textScrollPane = new JScrollPane(textArea);
     private static final JButton send = new JButton("发送");
@@ -50,8 +50,9 @@ public class ContactPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (Vars.gameMode == Vars.GAMEMODE_TEST)
                     putMessage(Vars.P1Name + ": " + textArea.getText());
-                else if(Vars.gameMode == Vars.GAMEMODE_PVP)
+                else if(Vars.gameMode == Vars.GAMEMODE_PVP) {
                     Vars.net.sendMessage(textArea.getText());
+                }
             }
         });
         panel2.add(infArea, BorderLayout.NORTH);
