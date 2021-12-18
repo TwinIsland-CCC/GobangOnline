@@ -199,48 +199,92 @@ public class ChessPanel extends JPanel {
         indexOfY = col;
         if(!Vars.gameIsOver) {
             if (Vars.gameMode == Vars.GAMEMODE_TEST) {
-                if (Vars.chessPos[indexOfX][indexOfY].canPutChess()) {
-                    if (Vars.steps % 2 == 0) {//黑棋
-                        //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                        Vars.chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
-                        Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
-                        ContactPanel.infArea.setText("白棋回合");
-                        GoBang.downState.setText(Vars.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
-                    } else {//白棋
-                        //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
-                        Vars.chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
-                        Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
-                                (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
-                        ContactPanel.infArea.setText("黑棋回合");
-                        GoBang.downState.setText(Vars.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
-                    }
-                    //sndThread.start();
-                    repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
-                    success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
-
-                    Vars.steps++;//如果步数到达225则和棋
-                    if (Vars.steps >= 225) {
-                        GameOver(-1);//-1则为和棋
-                        return;
-                    }
-                    System.out.println(indexOfX + " " + indexOfY);
-
-                    if (isWin(indexOfX, indexOfY)) {
-                        GameOver(Vars.steps % 2);//1为黑棋胜，0为白棋胜
-                    }
-                    //repaint();
-                } else {
-                    fail.play(Sound.NOT_LOOP);
-                    GoBang.downState.setText("这个位置已经有棋子了！");
-                }
-                System.out.println(Vars.history);
-            } else if (Vars.gameMode == Vars.GAMEMODE_PVE) {
+                putChessDown();
+            }
+            else if (Vars.gameMode == Vars.GAMEMODE_PVE) {
                 //TODO 人机对战
+            }
+            else if (Vars.gameMode == Vars.GAMEMODE_PVP) {
 
-            } else if (Vars.gameMode == Vars.GAMEMODE_PVP) {
-                //TODO 联网对战
+                if (Network.CHESS_TYPE == GoBang.BLACK){
+                    if (Vars.steps % 2 == 0){//黑棋回合
+                        if (Vars.chessPos[row][col].canPutChess()) {
+                            Vars.net.sendChess(row, col);
+                            putChessDown();
+                        }
+                    }
+                    else {
+                        GoBang.downState.setText("还没到你的回合！");
+                        fail.play(Sound.NOT_LOOP);
+                    }
+                }
+                else {
+                    if (Vars.steps % 2 == 1){//白棋回合
+                        if (Vars.chessPos[row][col].canPutChess()) {
+                            Vars.net.sendChess(row, col);
+                            putChessDown();
+                        }
+                    }
+                    else {
+                        GoBang.downState.setText("还没到你的回合！");
+                        fail.play(Sound.NOT_LOOP);
+                    }
+                }
+            }
+        }
+    }
 
+    private void putChessDown() {//落子
+        if (Vars.chessPos[indexOfX][indexOfY].canPutChess()) {
+            if (Vars.steps % 2 == 0) {//黑棋
+                //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                Vars.chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
+                Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
+                ContactPanel.infArea.setText("白棋回合");
+                GoBang.downState.setText(Vars.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+            } else {//白棋
+                //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
+                Vars.chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
+                Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
+                        (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
+                ContactPanel.infArea.setText("黑棋回合");
+                GoBang.downState.setText(Vars.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+            }
+            //sndThread.start();
+            repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
+            success.play(Sound.NOT_LOOP);//TODO 考虑开一个新的线程存按键音？
+
+            Vars.steps++;//如果步数到达225则和棋
+
+            if (Vars.steps >= 225) {
+                GameOver(-1);//-1则为和棋
+                return;
+            }
+            System.out.println(indexOfX + " " + indexOfY);
+
+            if (isWin(indexOfX, indexOfY)) {
+                GameOver(Vars.steps % 2);//1为黑棋胜，0为白棋胜
+            }
+            //repaint();
+        } else {
+            fail.play(Sound.NOT_LOOP);
+            GoBang.downState.setText("这个位置已经有棋子了！");
+        }
+        System.out.println(Vars.history);
+    }
+
+    public void pvpPutChess(int row, int col, int chessType) {
+        indexOfX = row;
+        indexOfY = col;
+        if(!Vars.gameIsOver) {
+
+            if (Vars.chessPos[row][col].canPutChess()) {
+                Vars.net.sendChess(row, col);
+                putChessDown();
+            }
+            else {
+                fail.play(Sound.NOT_LOOP);
             }
         }
     }

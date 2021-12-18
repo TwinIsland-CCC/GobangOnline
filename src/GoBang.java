@@ -58,11 +58,6 @@ public class GoBang {
 
     private static final Music snd = new Music();
 
-    private static void initial() {
-
-
-    }
-
     public static void run(final JFrame f, final int width, final int height, int mode){
         //mode为模式选择
         Vars.gameMode = mode;
@@ -73,178 +68,241 @@ public class GoBang {
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setSize(new Dimension(width, height));
                 f.setResizable(false);
-                f.setLayout(new BorderLayout(3,3));
-
                 //musThread.start();
-
-                initial();
                 test.setVisible(true);
-
-                downState.setFont(myFont);
-                downState.setHorizontalAlignment(SwingConstants.RIGHT);
-
-                stateBar.setLayout(new BorderLayout());
-                stateBar.add(downState);
-
-                //对调试用按钮的设置，实际游戏中将禁用这些按钮
-                forceEnd.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        GameOver();
-                        //musThread.stop();
-                    }
-                });
-
-                stepsChg.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Vars.steps+=224;
-                        System.out.println("成功，现在的步数为："+Vars.steps);
-                    }
-                });
-
-                //对controlBar的设置
-                controlBar.setLayout(new GridLayout(12,1));
-                //悔棋
-                undoBtn.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (!Vars.gameIsOver) {
-                            if (Vars.steps > 0) {
-                                String type;
-                                if (Vars.steps % 2 == 1) type = "黑棋";
-                                else type = "白棋";
-                                int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是" + type + "，你真的要悔棋吗？ "
-                                        , "悔棋？", JOptionPane.YES_NO_OPTION);//TODO 如果是人人对战，询问对方是否同意
-                                System.out.println(res);
-                                if (res == 0) {
-                                    //TODO 悔棋
-                                    Vars.steps--;
-                                    Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
-                                    System.out.println(Vars.history.size());
-                                    Vars.history.remove(Vars.history.size() - 1);//TODO 越界？
-                                    centre.repaint();
-                                    System.out.println("Undo");
-
-                                }
-                            } else
-                                JOptionPane.showMessageDialog(new JOptionPane(), "什么也没有，你悔个什么劲呢？？？", "？？？", JOptionPane.ERROR_MESSAGE);
-                        }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-                //投降
-                surrenderBtn.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (!Vars.gameIsOver) {
-                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
-                                    , "投降？", JOptionPane.YES_NO_OPTION);
-                            System.out.println(res);
-                            if (res == 0){
-                                //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
-                                System.out.println("Surrender");
-                                centre.GameOver(Vars.steps%2);
-                            }
-                        }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-                //重开
-                restartBtn.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {//TODO 只在人机对战有效
-                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "要重新开始对局吗？ ",
-                                "重开？", JOptionPane.YES_NO_OPTION);
-                        System.out.println(res);
-                        if (res == 0){
-                            //TODO 重新开始
-                            Vars.gameIsOver = false;
-                            replayBtn.setVisible(false);
-                            centre.initial();
-                            centre.repaint();
-                            System.out.println("Restart");
-                        }
-                    }
-                });
-                //退出
-                exitBtn.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "如果你离开游戏，你的对手将胜利，并且你将返回选择界面。",
-                                "离开游戏并返回选关界面？", JOptionPane.YES_NO_OPTION);
-                        System.out.println(res);
-                        if (res == 0){
-                            f.dispatchEvent(new WindowEvent(f,WindowEvent.WINDOW_CLOSING));//TODO 返回，现在是点击按钮关闭
-                            HelloWindow.run(new HelloWindow(), 1024, 768);
-                        }
-                    }
-                });
-                //复盘
-                replayBtn.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "复盘可以看到你上一盘游戏中所有行动。"
-                                , "是否进行复盘？", JOptionPane.YES_NO_OPTION);
-                        System.out.println(res);
-                        if (res == 0){
-                            //TODO 如果你选择投降，那么游戏直接结束，对方会收到通知
-                            System.out.println("replay");
-                            replayBtn.setVisible(false);
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    centre.replay();
-                                }
-                            }).start();
-                        }
-                    }
-                });
-
-                controlBar.add(undoBtn);
-                controlBar.add(surrenderBtn);
-                controlBar.add(restartBtn);
-                controlBar.add(exitBtn);
-                controlBar.add(replayBtn);
-
-                replayBtn.setVisible(false);
-
-                //contactBar.setLayout(new GridLayout(5,1));
-
-                northBar.setLayout(new FlowLayout());
-                upState.setFont(chineseFont);
-                upState.setHorizontalTextPosition(JLabel.LEFT);
-
-                String gameType = "";
-                if (mode == Vars.GAMEMODE_TEST) gameType = "单机模式";
-                else if (mode == Vars.GAMEMODE_PVE) gameType = "人机对战";
-                else if (mode == Vars.GAMEMODE_PVP) gameType = "联机对战";
-
-                System.out.println(Vars.P2Name);
-
-                gameType += "   玩家1：" + Vars.P1Name + "  |  玩家2：" + Vars.P2Name;
-
-                upState.setText(gameType);
-
-                northBar.add(upState);
-                northBar.add(forceEnd);
-                northBar.add(stepsChg);
-
-                northBar.setPreferredSize(new Dimension(800,30));
-                controlBar.setPreferredSize(new Dimension(100,600));
-                //contactBar.setPreferredSize(new Dimension(100,600));
-                stateBar.setPreferredSize(new Dimension(800,30));
-
-                f.add(northBar, BorderLayout.NORTH);
-                f.add(stateBar, BorderLayout.SOUTH);
-                f.add(controlBar, BorderLayout.WEST);
-                f.add(contactBar, BorderLayout.EAST);
-                f.add(centre, BorderLayout.CENTER);
-
-
-
-                f.setVisible(true);
+                setDownState();
+                setGame(f);
+                setUpState(mode);
             }
         });
 
+    }
+
+    public static void setUpState(int mode) {
+        if (mode == Vars.GAMEMODE_TEST) {
+            Vars.gameType = "单机模式";
+            Vars.gameType += "   玩家1：" + Vars.P1Name + "  |  玩家2：" + Vars.P2Name;
+        }
+        else if (mode == Vars.GAMEMODE_PVE) {
+            Vars.gameType = "人机对战";
+        }
+        //人人对战则调用
+        System.out.println(Vars.P2Name);
+
+        upState.setText(Vars.gameType);
+
+    }
+
+    private static void setDownState() {
+        downState.setFont(myFont);
+        downState.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        stateBar.setLayout(new BorderLayout());
+        stateBar.add(downState);
+    }
+
+    private static void setGame(JFrame f) {
+        f.setLayout(new BorderLayout(3,3));
+
+        //对调试用按钮的设置，实际游戏中将禁用这些按钮
+        forceEnd.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                GameOver();
+                //musThread.stop();
+            }
+        });
+
+        stepsChg.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Vars.steps+=224;
+                System.out.println("成功，现在的步数为："+Vars.steps);
+            }
+        });
+
+        //对controlBar的设置
+        controlBar.setLayout(new GridLayout(12,1));
+        //悔棋
+        undoBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!Vars.gameIsOver) {
+                    if (Vars.gameMode == Vars.GAMEMODE_TEST){
+                        if (Vars.steps > 0) {
+                            String type;
+                            if (Vars.steps % 2 == 1) type = "黑棋";
+                            else type = "白棋";
+                            int res = JOptionPane.showConfirmDialog(new JOptionPane(), "你是" + type + "，你真的要悔棋吗？ "
+                                    , "悔棋？", JOptionPane.YES_NO_OPTION);
+                            System.out.println(res);
+                            if (res == 0) {
+                                undo();
+                            }
+                        }
+                    }
+                    else if (Vars.gameMode == Vars.GAMEMODE_PVE){
+
+                    }
+                    else if (Vars.gameMode == Vars.GAMEMODE_PVP){
+                        Vars.net.sendUndo();
+                        ContactPanel.showArea.append("悔棋请求已发送，等待回应...\n");
+                    }
+                    else JOptionPane.showMessageDialog(new JOptionPane(), "什么也没有，你悔个什么劲呢？？？", "？？？", JOptionPane.ERROR_MESSAGE);
+                }
+                else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        //投降
+        surrenderBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!Vars.gameIsOver) {
+                    if (Vars.gameMode == Vars.GAMEMODE_TEST){
+                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
+                                , "投降？", JOptionPane.YES_NO_OPTION);
+                        System.out.println(res);
+                        if (res == 0){
+                            System.out.println("Surrender");
+                            centre.GameOver(Vars.steps%2);
+                        }
+                    }
+                    else if (Vars.gameMode == Vars.GAMEMODE_PVE){
+
+                    }
+                    else if (Vars.gameMode == Vars.GAMEMODE_PVP){
+                        int res = JOptionPane.showConfirmDialog(new JOptionPane(), "大丈夫，你真的要投降？ "
+                                , "投降？", JOptionPane.YES_NO_OPTION);
+                        System.out.println(res);
+                        if (res == 0){
+                            System.out.println("Surrender");
+                            centre.GameOver(Vars.steps%2);
+                            Vars.net.sendSurrender();
+                            ContactPanel.showArea.append("你已投降\n");
+                        }
+                    }
+                }else JOptionPane.showMessageDialog(new JOptionPane(), "游戏已经结束，请开始下一局游戏", "异常", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        //重开
+        restartBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (Vars.gameMode == Vars.GAMEMODE_TEST){
+                    int res = JOptionPane.showConfirmDialog(new JOptionPane(), "要重新开始对局吗？ ",
+                            "重开？", JOptionPane.YES_NO_OPTION);
+                    System.out.println(res);
+                    if (res == 0){
+                        restart();
+                    }
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVE){
+
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVP){
+                    Vars.net.sendRestart();
+                    ContactPanel.showArea.append("重开请求已发送，等待回应...\n");
+                }
+            }
+        });
+        //退出
+        exitBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (Vars.gameMode == Vars.GAMEMODE_TEST){
+                    int res = JOptionPane.showConfirmDialog(new JOptionPane(), "如果你离开游戏，你的对手将胜利，并且你将返回选择界面。",
+                            "离开游戏并返回选关界面？", JOptionPane.YES_NO_OPTION);
+                    System.out.println(res);
+                    if (res == 0){
+                        f.dispatchEvent(new WindowEvent(f,WindowEvent.WINDOW_CLOSING));//TODO 返回，现在是点击按钮关闭
+                        HelloWindow.run(new HelloWindow(), 1024, 768);
+                    }
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVE){
+
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVP){
+                    int res = JOptionPane.showConfirmDialog(new JOptionPane(), "如果你离开游戏，你的对手将胜利，并且你将返回选择界面。",
+                            "离开游戏并返回选关界面？", JOptionPane.YES_NO_OPTION);
+                    System.out.println(res);
+                    if (res == 0){
+                        Vars.net.sendEnemyExit();
+                        f.dispatchEvent(new WindowEvent(f,WindowEvent.WINDOW_CLOSING));//TODO 返回，现在是点击按钮关闭
+                        HelloWindow.run(new HelloWindow(), 1024, 768);
+                    }
+                }
+            }
+        });
+        //复盘
+        replayBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int res = JOptionPane.showConfirmDialog(new JOptionPane(), "复盘可以看到你上一盘游戏中所有行动。"
+                        , "是否进行复盘？", JOptionPane.YES_NO_OPTION);
+                System.out.println(res);
+                if (res == 0){
+                    //如果你选择投降，那么游戏直接结束，对方会收到通知
+                    System.out.println("replay");
+                    replayBtn.setVisible(false);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            centre.replay();
+                        }
+                    }).start();
+                }
+            }
+        });
+
+        controlBar.add(undoBtn);
+        controlBar.add(surrenderBtn);
+        controlBar.add(restartBtn);
+        controlBar.add(exitBtn);
+        controlBar.add(replayBtn);
+
+        replayBtn.setVisible(false);
+
+        //contactBar.setLayout(new GridLayout(5,1));
+
+        northBar.setLayout(new FlowLayout());
+        upState.setFont(chineseFont);
+        upState.setHorizontalTextPosition(JLabel.LEFT);
+
+        northBar.add(upState);
+        northBar.add(forceEnd);
+        northBar.add(stepsChg);
+
+        northBar.setPreferredSize(new Dimension(800,30));
+        controlBar.setPreferredSize(new Dimension(100,600));
+        //contactBar.setPreferredSize(new Dimension(100,600));
+        stateBar.setPreferredSize(new Dimension(800,30));
+
+        f.add(northBar, BorderLayout.NORTH);
+        f.add(stateBar, BorderLayout.SOUTH);
+        f.add(controlBar, BorderLayout.WEST);
+        f.add(contactBar, BorderLayout.EAST);
+        f.add(centre, BorderLayout.CENTER);
+
+
+
+        f.setVisible(true);
+    }
+
+    public static void undo() {
+        Vars.steps--;
+        Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+        System.out.println(Vars.history.size());
+        Vars.history.remove(Vars.history.size() - 1);//TODO 越界？
+        centre.repaint();
+        System.out.println("Undo");
+    }
+
+    public static void restart() {
+        Vars.gameIsOver = false;
+        replayBtn.setVisible(false);
+        centre.initial();
+        centre.repaint();
+        System.out.println("Restart");
     }
 
     //游戏结束

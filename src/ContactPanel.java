@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author CCC
@@ -13,8 +15,8 @@ public class ContactPanel extends JPanel {
 
     private static final Font myFont = new Font("", Font.BOLD, 30);
     public static final JTextArea infArea = new JTextArea("Test");//显示游戏中信息
-    private static final JTextArea showArea = new JTextArea("游戏开始！\n");
-    private static final JTextArea textArea = new JTextArea("测试测试测试测试");
+    public static final JTextArea showArea = new JTextArea("游戏开始！\n");
+    private static final JTextArea textArea = new JTextArea("在这里输入聊天内容");
     private static final JScrollPane showScrollPane = new JScrollPane(showArea);
     private static final JScrollPane textScrollPane = new JScrollPane(textArea);
     private static final JButton send = new JButton("发送");
@@ -33,7 +35,7 @@ public class ContactPanel extends JPanel {
         //showArea.setPreferredSize(new Dimension(200,200));
         //textArea.setPreferredSize(new Dimension(300,20));
         showScrollPane.setPreferredSize(new Dimension(300,400));
-        textScrollPane.setPreferredSize(new Dimension(300,20));
+        textScrollPane.setPreferredSize(new Dimension(300,40));
 
         JPanel panel = new JPanel(new BorderLayout());
         JPanel panel2 = new JPanel(new BorderLayout());
@@ -48,10 +50,14 @@ public class ContactPanel extends JPanel {
         send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (Vars.gameMode == Vars.GAMEMODE_TEST)
-                    putMessage(Vars.P1Name + ": " + textArea.getText());
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+                String time = df.format(new Date());//获取当前时间
+                if (Vars.gameMode == Vars.GAMEMODE_TEST) {
+                    putMessage(Vars.P1Name + "[我]: " + time + "\n" + textArea.getText());
+                }
                 else if(Vars.gameMode == Vars.GAMEMODE_PVP) {
                     Vars.net.sendMessage(textArea.getText());
+                    putMessage(Vars.P1Name + "[我]: " + time + "\n" + textArea.getText());
                 }
             }
         });

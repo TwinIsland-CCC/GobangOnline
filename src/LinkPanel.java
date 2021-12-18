@@ -30,6 +30,8 @@ public class LinkPanel extends JPanel {
                 listenBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        listenBtn.setEnabled(false);
+                        connectBtn.setEnabled(false);
                         Vars.net.listen(ipInput.getText());
                         System.out.println("已连接到" + ipInput.getText()+"，正在等待玩家连接......");
                     }
@@ -37,6 +39,8 @@ public class LinkPanel extends JPanel {
                 connectBtn.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        listenBtn.setEnabled(false);
+                        connectBtn.setEnabled(false);
                         System.out.println("寻找主机...");
                         Vars.net.connect(ipInput.getText());
                         System.out.println("连接成功");
@@ -61,7 +65,7 @@ public class LinkPanel extends JPanel {
                     public void actionPerformed(ActionEvent e) {
                         Vars.P1Name = nameChg.getText();
                         System.out.println("成功，现在的名字是："+Vars.P1Name);
-
+                        infHint.append("成功，现在的名字是："+Vars.P1Name+"\n");
                     }
                 });
 
