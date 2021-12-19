@@ -112,6 +112,9 @@ public class ChessPanel extends JPanel {
             GoBang.downState.setText("平局！");
             ContactPanel.infArea.setText("平局！");
         }
+        if (Player == Vars.P1Type) Vars.P1WinNum++;
+        else if (Player == Vars.P2Type) Vars.P2WinNum++;
+        upperInfChg();
         GoBang.GameOver();
         new Thread(new Runnable() {
             @Override
@@ -120,6 +123,19 @@ public class ChessPanel extends JPanel {
             }
         }).start();
 
+    }
+
+    private void upperInfChg() {
+        StringBuilder builder = new StringBuilder(Vars.p1GameInf);
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append(Vars.P1WinNum);
+        Vars.p1GameInf = builder.toString();
+        builder = new StringBuilder(Vars.p2GameInf);
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append(Vars.P2WinNum);
+        Vars.p2GameInf = builder.toString();
+        GoBang.p1Inf.setText(Vars.p1GameInf);
+        GoBang.p2Inf.setText(Vars.p2GameInf);
     }
 
 
@@ -199,18 +215,26 @@ public class ChessPanel extends JPanel {
         indexOfY = col;
         if(!Vars.gameIsOver) {
             if (Vars.gameMode == Vars.GAMEMODE_TEST) {
-                putChessDown();
+                if (Vars.timeModeFlag){
+                    timerPutChess();
+                }
+                else putChessDown();
             }
             else if (Vars.gameMode == Vars.GAMEMODE_PVE) {
                 //TODO 人机对战
             }
             else if (Vars.gameMode == Vars.GAMEMODE_PVP) {
 
-                if (Network.CHESS_TYPE == GoBang.BLACK){
+                if (Vars.CHESS_TYPE == GoBang.BLACK){
                     if (Vars.steps % 2 == 0){//黑棋回合
                         if (Vars.chessPos[row][col].canPutChess()) {
                             Vars.net.sendChess(row, col);
                             putChessDown();
+
+                        }
+                        else {
+                            GoBang.downState.setText("这个位置不可用！");
+                            fail.play(Sound.NOT_LOOP);
                         }
                     }
                     else {
@@ -224,6 +248,10 @@ public class ChessPanel extends JPanel {
                             Vars.net.sendChess(row, col);
                             putChessDown();
                         }
+                        else {
+                            GoBang.downState.setText("这个位置不可用！");
+                            fail.play(Sound.NOT_LOOP);
+                        }
                     }
                     else {
                         GoBang.downState.setText("还没到你的回合！");
@@ -234,22 +262,29 @@ public class ChessPanel extends JPanel {
         }
     }
 
+    private void timerPutChess() {
+        Vars.myTimer.stopTimer();
+        putChessDown();
+        Vars.myTimer.startCount();
+    }
+
     private void putChessDown() {//落子
         if (Vars.chessPos[indexOfX][indexOfY].canPutChess()) {
+
             if (Vars.steps % 2 == 0) {//黑棋
                 //paintBlackChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
                 Vars.chessPos[indexOfX][indexOfY].setType(GoBang.BLACK);
                 Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
                         (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.BLACK, indexOfX, indexOfY));
                 ContactPanel.infArea.setText("白棋回合");
-                GoBang.downState.setText(Vars.P1Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                GoBang.downState.setText("黑色方下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
             } else {//白棋
                 //paintWhiteChess(getGraphics(), chessPoint[indexOfX][indexOfY].getX(), chessPoint[indexOfX][indexOfY].getY());
                 Vars.chessPos[indexOfX][indexOfY].setType(GoBang.WHITE);
                 Vars.history.add(new Position((int) chessPoint[indexOfX][indexOfY].getX(),
                         (int) chessPoint[indexOfX][indexOfY].getY(), GoBang.WHITE, indexOfX, indexOfY));
                 ContactPanel.infArea.setText("黑棋回合");
-                GoBang.downState.setText(Vars.P2Name + "下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
+                GoBang.downState.setText("白色方下了一个棋子，在(" + (indexOfX + 1) + ", " + (indexOfY + 1) + ")位置！");
             }
             //sndThread.start();
             repaint();//TODO 缺点：反应比较迟钝。尝试解决一下？
@@ -266,6 +301,7 @@ public class ChessPanel extends JPanel {
             if (isWin(indexOfX, indexOfY)) {
                 GameOver(Vars.steps % 2);//1为黑棋胜，0为白棋胜
             }
+            Vars.myTimer.stopTimer();
             //repaint();
         } else {
             fail.play(Sound.NOT_LOOP);
@@ -278,13 +314,15 @@ public class ChessPanel extends JPanel {
         indexOfX = row;
         indexOfY = col;
         if(!Vars.gameIsOver) {
-
+            if (Vars.timeModeFlag){
+                timerPutChess();
+            }
+            else putChessDown();
             if (Vars.chessPos[row][col].canPutChess()) {
                 Vars.net.sendChess(row, col);
-                putChessDown();
             }
             else {
-                fail.play(Sound.NOT_LOOP);
+                //fail.play(Sound.NOT_LOOP);
             }
         }
     }

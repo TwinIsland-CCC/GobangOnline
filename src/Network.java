@@ -13,6 +13,8 @@ public class Network {
     private static final String CMD_DO = "&&&";
     private static final String CMD_SURRENDER = "333";
     private static final String CMD_ENEMY_EXIT = "444";
+    private static final String CMD_TIME_MODE = "555";
+    private static final String CMD_TIMEOUT = "666";
     public static int PORT = 9999;
     private Socket s = null;
     protected PrintWriter out = null;
@@ -21,8 +23,8 @@ public class Network {
     public static final String CMD_CONTACT = "###";
     private static final String CMD_INITIAL = "$$$";
     private static final String CMD_CONTROL = "%%%";
+    private static final String CMD_REFUSE = "***";
     public static final int CMD_LENGTH = 3;
-    public static int CHESS_TYPE = GoBang.BLACK;//默认黑棋
     public void listen(final String ip){
         new Thread(new Runnable() {
             @Override
@@ -56,7 +58,7 @@ public class Network {
                     LinkPanel.infHint.append("连接成功"+"\n你是白棋，请点击开始游戏，开始对局~");
                     startReadThread();
                     LinkPanel.linkFlag = true;
-                    CHESS_TYPE = GoBang.WHITE;//如果是用户端则是白棋
+                    Vars.CHESS_TYPE = GoBang.WHITE;//如果是用户端则是白棋
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -92,9 +94,7 @@ public class Network {
             String[] cmd = line.split(",");
             int row = Integer.parseInt(cmd[0]);
             int col = Integer.parseInt(cmd[1]);
-
-            //GoBang.centre.putChess(row, col);
-            GoBang.centre.pvpPutChess(row, col, CHESS_TYPE);
+            GoBang.centre.pvpPutChess(row, col, Vars.CHESS_TYPE);
 
         }
         else if (line.startsWith(CMD_CONTACT)){
@@ -110,13 +110,7 @@ public class Network {
             Vars.gameType = "联机对战";
             Vars.P2Name = line;
             System.out.println("成功，P2Name = " + Vars.P2Name);
-            String chessType = null;
-            if (CHESS_TYPE == GoBang.BLACK) chessType = "黑棋";
-            else if (CHESS_TYPE == GoBang.WHITE) chessType = "白棋";
-            Vars.gameType += "   我(" + chessType + "): " + Vars.P1Name;
-            if (CHESS_TYPE == GoBang.BLACK) chessType = "白棋";
-            else if (CHESS_TYPE == GoBang.WHITE) chessType = "黑棋";
-            Vars.gameType +="  |  对手(" + chessType + "): "+ Vars.P2Name;
+            setUpperInf();
             GoBang.setUpState(Vars.GAMEMODE_PVP);
         }
         else if(line.startsWith(CMD_CONTROL)){
@@ -129,6 +123,10 @@ public class Network {
                     GoBang.restart();
                     sendDoRestart();
                 }
+                else {
+                    sendRefuseRestart();
+                    ContactPanel.showArea.append("已拒绝对方的重开申请\n");
+                }
             }
             else if (line.substring(CMD_LENGTH).equals(CMD_UNDO)){
                 if (Vars.steps > 0) {
@@ -136,18 +134,42 @@ public class Network {
                             , "悔棋？", JOptionPane.YES_NO_OPTION);
                     System.out.println(res);
                     if (res == 0) {
-                        GoBang.undo();
+                        GoBang.listenUndo();
                         sendDoUndo();
+                    }
+                    else {
+                        sendRefuseUndo();
+                        ContactPanel.showArea.append("已拒绝对方的悔棋申请\n");
                     }
                 }
             }
             else if (line.substring(CMD_LENGTH).equals(CMD_SURRENDER)){
                 JOptionPane.showMessageDialog(new JOptionPane(), "对方投降，你获胜了");
                 GoBang.centre.GameOver(Vars.steps%2);
+                ContactPanel.showArea.append("对方投降了，你获胜了\n");
             }
             else if (line.substring(CMD_LENGTH).equals(CMD_ENEMY_EXIT)){
                 JOptionPane.showMessageDialog(new JOptionPane(), "对方离开了游戏，你获胜了");
                 GoBang.centre.GameOver(Vars.steps%2);
+                ContactPanel.showArea.append("对方离开了游戏，你获胜了\n");
+            }
+            else if (line.substring(CMD_LENGTH).equals(CMD_TIME_MODE)){
+                int res = JOptionPane.showConfirmDialog(new JOptionPane(), "对方请求开启计时模式，如果开启计时模式，你们的每一步棋都将限制时间，时间耗尽则直接失败。 ",
+                        "开启计时模式？", JOptionPane.YES_NO_OPTION);
+                System.out.println(res);
+                if (res == 0) {
+                    Vars.timeModeFlag = true;
+                    GoBang.restart();
+                    sendDoTimeMode();
+                }
+                else {
+                    sendRefuseTimeMode();
+                    ContactPanel.showArea.append("已拒绝对方的开启计时模式申请\n");
+                }
+            }
+            else if (line.substring(CMD_LENGTH).equals(CMD_TIMEOUT)){
+                ContactPanel.showArea.append("对手时间耗尽，你赢了\n");
+                GoBang.centre.GameOver(Vars.steps % 2);
             }
         }
         else if(line.startsWith(CMD_DO)){
@@ -157,13 +179,62 @@ public class Network {
             }
             else if (line.substring(CMD_LENGTH).equals(CMD_UNDO)){
                 ContactPanel.showArea.append("对方已接受悔棋申请，你已撤回一步\n");
-                GoBang.undo();
-
+                GoBang.requestUndo();
             }
+            else if (line.substring(CMD_LENGTH).equals(CMD_TIME_MODE)){
+                ContactPanel.showArea.append("对方已接受计时模式开启申请，即将开启计时模式并重新开始对局\n");
+                GoBang.timeModeStart();
+            }
+        }
+        else if (line.startsWith(CMD_REFUSE)){
+            if (line.substring(CMD_LENGTH).equals(CMD_RESTART)){
+                ContactPanel.showArea.append("你的重新开局申请已经被对方拒绝\n");
+            }
+            else if (line.substring(CMD_LENGTH).equals(CMD_UNDO)){
+                ContactPanel.showArea.append("你的悔棋申请已经被对方拒绝\n");
+            }
+
         }
         else {
             System.out.println("无效的指令，请检查程序");
         }
+    }
+
+
+
+    private void setUpperInf() {
+        String chessType = null;
+        if (Vars.CHESS_TYPE == GoBang.BLACK) {
+            chessType = "黑棋";
+            Vars.P1Type = 1;
+            Vars.P2Type = 0;
+        }
+        else if (Vars.CHESS_TYPE == GoBang.WHITE) {
+            chessType = "白棋";
+            Vars.P1Type = 0;
+            Vars.P2Type = 1;
+        }
+        //Vars.gameType += "   我(" + chessType + "): " + Vars.P1Name;
+        Vars.p1GameInf += "我(" + chessType + "): " + Vars.P1Name + "  胜场: " + Vars.P1WinNum;
+        if (Vars.CHESS_TYPE == GoBang.BLACK) chessType = "白棋";
+        else if (Vars.CHESS_TYPE == GoBang.WHITE) chessType = "黑棋";
+        //Vars.gameType +="  |  对手(" + chessType + "): "+ Vars.P2Name;
+        Vars.p2GameInf += "对手(" + chessType + "): " + Vars.P1Name + "  胜场: " + Vars.P1WinNum;
+    }
+    private void sendDoTimeMode() {
+        out.println(CMD_DO+CMD_TIME_MODE);
+    }
+
+    private void sendRefuseTimeMode() {
+        out.println(CMD_REFUSE+CMD_TIME_MODE);
+    }
+
+    private void sendRefuseRestart() {
+        out.println(CMD_REFUSE+CMD_RESTART);
+    }
+
+    private void sendRefuseUndo() {
+        out.println(CMD_REFUSE+CMD_UNDO);
     }
 
     public void sendChess(int row, int col){
@@ -196,5 +267,13 @@ public class Network {
 
     public void sendEnemyExit() {
         out.println(CMD_CONTROL+ CMD_ENEMY_EXIT);
+    }
+
+    public void sendTimeModeRequest() {
+        out.println(CMD_CONTROL+ CMD_TIME_MODE);
+    }
+
+    public void sendTimeOut() {
+        out.println(CMD_CONTROL+ CMD_TIMEOUT);
     }
 }

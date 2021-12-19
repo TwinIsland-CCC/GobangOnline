@@ -10,13 +10,6 @@ public class GoBang {
     private static final Font myFont = new Font("宋体", Font.ITALIC, 16);
     private static final Font chineseFont = new Font("宋体", Font.PLAIN, 16);
 
-
-    private static final JButton btn0 = new JButton("0");
-    private static final JButton btn1 = new JButton("1");
-    private static final JButton btn2 = new JButton("2");
-    private static final JButton btn3 = new JButton("3");
-    private static final JButton Back = new JButton("Back");
-
     private static final JPanel northBar = new JPanel();//北侧栏，用于显示状态以及备用，并且用于调试
     private static final JPanel stateBar = new JPanel();//南侧栏，用于放置一个状态栏，显示”谁在哪下了棋子“等信息
     private static final JPanel controlBar = new JPanel();//西侧栏，用于放置操作按钮，悔棋、认输、重新开始、退出游戏等
@@ -24,12 +17,17 @@ public class GoBang {
 
     public static final JLabel downState = new JLabel("Mr.CCC ");//TODO 用于显示右下角信息，包含下棋下到哪一步等等
     public static final JLabel upState = new JLabel("Mr.CCC ");//TODO 用于显示左上角信息，显示游戏模式和玩家信息
+    public static final JLabel p1Inf = new JLabel(Vars.P1Name);
+    public static final JLabel p2Inf = new JLabel(Vars.P2Name);
+    public static final JLabel separator1 = new JLabel("  |  ");
+    public static final JLabel separator2 = new JLabel("  |  ");
 
     private static final JButton undoBtn = new JButton("悔棋");
     private static final JButton surrenderBtn = new JButton("认输");
     private static final JButton restartBtn = new JButton("重新开始");
     private static final JButton exitBtn = new JButton("退出游戏");
     public static final JButton replayBtn = new JButton("复盘");
+    private static final JButton timeBtn = new JButton("计时模式");
 
     //调试用按钮
     private static final JButton forceEnd = new JButton("强制结束游戏");
@@ -37,8 +35,8 @@ public class GoBang {
     private static final JLabel test = new JLabel("Mr.CCC");
 
     //游戏途中产生的信息
-    public static final int BLACK = -1;
-    public static final int SPACE = 0;
+    public static final int BLACK = 0;
+    public static final int SPACE = -1;
     public static final int WHITE = 1;
 /*    public static int steps = 0;//步数
     public static boolean winState = false;//是否胜利*/
@@ -81,7 +79,8 @@ public class GoBang {
     public static void setUpState(int mode) {
         if (mode == Vars.GAMEMODE_TEST) {
             Vars.gameType = "单机模式";
-            Vars.gameType += "   玩家1：" + Vars.P1Name + "  |  玩家2：" + Vars.P2Name;
+            Vars.p1GameInf += "玩家1: " + Vars.P1Name + "  胜场: " + Vars.P1WinNum;
+            Vars.p2GameInf += "玩家2: " + Vars.P2Name + "  胜场: " + Vars.P2WinNum;
         }
         else if (mode == Vars.GAMEMODE_PVE) {
             Vars.gameType = "人机对战";
@@ -90,6 +89,8 @@ public class GoBang {
         System.out.println(Vars.P2Name);
 
         upState.setText(Vars.gameType);
+        p1Inf.setText(Vars.p1GameInf);
+        p2Inf.setText(Vars.p2GameInf);
 
     }
 
@@ -122,7 +123,7 @@ public class GoBang {
         });
 
         //对controlBar的设置
-        controlBar.setLayout(new GridLayout(12,1));
+        controlBar.setLayout(new GridLayout(2,1));
         //悔棋
         undoBtn.addActionListener(new ActionListener() {
             @Override
@@ -254,11 +255,41 @@ public class GoBang {
             }
         });
 
-        controlBar.add(undoBtn);
-        controlBar.add(surrenderBtn);
-        controlBar.add(restartBtn);
-        controlBar.add(exitBtn);
-        controlBar.add(replayBtn);
+        JPanel gridPanel = new JPanel(new GridLayout(5,1,3,3));
+
+        gridPanel.add(undoBtn);
+        gridPanel.add(surrenderBtn);
+        gridPanel.add(restartBtn);
+        gridPanel.add(exitBtn);
+        gridPanel.add(replayBtn);
+        controlBar.add(gridPanel);
+
+        JPanel timerPanel = new JPanel(new BorderLayout());
+
+        timeBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (Vars.gameMode == Vars.GAMEMODE_TEST){
+                    int res = JOptionPane.showConfirmDialog(new JOptionPane(), "如果开启计时模式，你们的每一步棋都将限制时间，时间耗尽则直接失败。 ",
+                            "开启计时模式？", JOptionPane.YES_NO_OPTION);
+                    System.out.println(res);
+                    if (res == 0){
+                        Vars.timeModeFlag = true;
+                    }
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVE){
+
+                }
+                else if (Vars.gameMode == Vars.GAMEMODE_PVP) {
+                    Vars.net.sendTimeModeRequest();
+                    ContactPanel.showArea.append("计时模式开启请求已发送，等待回应...\n");
+                }
+            }
+        });
+
+        timerPanel.add(timeBtn, BorderLayout.NORTH);
+        timerPanel.add(Vars.myTimer, BorderLayout.CENTER);
+        controlBar.add(timerPanel);
 
         replayBtn.setVisible(false);
 
@@ -267,10 +298,22 @@ public class GoBang {
         northBar.setLayout(new FlowLayout());
         upState.setFont(chineseFont);
         upState.setHorizontalTextPosition(JLabel.LEFT);
+        p1Inf.setFont(chineseFont);
+        p1Inf.setHorizontalTextPosition(JLabel.LEFT);
+        p2Inf.setFont(chineseFont);
+        p2Inf.setHorizontalTextPosition(JLabel.LEFT);
+        separator1.setFont(chineseFont);
+        separator1.setHorizontalTextPosition(JLabel.LEFT);
+        separator2.setFont(chineseFont);
+        separator2.setHorizontalTextPosition(JLabel.LEFT);
 
         northBar.add(upState);
-        northBar.add(forceEnd);
-        northBar.add(stepsChg);
+        northBar.add(separator1);
+        northBar.add(p1Inf);
+        northBar.add(separator2);
+        northBar.add(p2Inf);
+        //northBar.add(forceEnd);
+        //northBar.add(stepsChg);
 
         northBar.setPreferredSize(new Dimension(800,30));
         controlBar.setPreferredSize(new Dimension(100,600));
@@ -288,13 +331,61 @@ public class GoBang {
         f.setVisible(true);
     }
 
+    private static void setTimer(){
+
+    }
+
     public static void undo() {
-        Vars.steps--;
-        Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
-        System.out.println(Vars.history.size());
-        Vars.history.remove(Vars.history.size() - 1);//TODO 越界？
-        centre.repaint();
-        System.out.println("Undo");
+        if (Vars.steps != 0){
+            Vars.steps--;
+            Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+            System.out.println(Vars.history.size());
+            Vars.history.remove(Vars.history.size() - 1);//TODO 越界？
+            centre.repaint();
+            System.out.println("Undo");
+        }
+    }
+
+    public static void requestUndo(){
+        if (Vars.steps != 0){//如果棋子是对方颜色，自己只撤一步，对方也一步
+            if (Vars.steps % 2 == Vars.CHESS_TYPE){
+                Vars.steps -= 2;
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                Vars.history.remove(Vars.history.size() - 1);
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                Vars.history.remove(Vars.history.size() - 1);
+                centre.repaint();
+            }
+            else {//如果当前棋子为自己颜色，自己一下撤两步，对方也两步
+                Vars.steps--;
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                System.out.println(Vars.history.size());
+                Vars.history.remove(Vars.history.size() - 1);
+                centre.repaint();
+            }
+            System.out.println("Undo");
+        }
+    }
+
+    public static void listenUndo(){
+        if (Vars.steps != 0){//如果棋子是对方颜色，自己只撤一步，对方也一步
+            if (Vars.steps % 2 == Vars.CHESS_TYPE){
+                Vars.steps--;
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                Vars.history.remove(Vars.history.size() - 1);
+                System.out.println(Vars.history.size());
+                centre.repaint();
+            }
+            else {//如果当前棋子为自己颜色，自己一下撤两步，对方也两步
+                Vars.steps -= 2;
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                Vars.history.remove(Vars.history.size() - 1);
+                Vars.chessPos[Vars.history.get(Vars.history.size() - 1).indexOfX][Vars.history.get(Vars.history.size() - 1).indexOfY].type = GoBang.SPACE;
+                Vars.history.remove(Vars.history.size() - 1);
+                centre.repaint();
+            }
+            System.out.println("Undo");
+        }
     }
 
     public static void restart() {
@@ -322,4 +413,8 @@ public class GoBang {
         run(new JFrame(), 955, 638, Vars.GAMEMODE_TEST);//调试时默认使用调试模式
     }
 
+    public static void timeModeStart() {
+        Vars.timeModeFlag = true;
+        restart();
+    }
 }
